@@ -1,0 +1,18 @@
+/* css/style.css : style volontairement très simple */
+body { background: #fff; font-family: Arial, sans-serif; font-size: 14px; margin: 10px; }
+#page { max-width: 800px; margin: auto; }
+h1 { font-size: 20px; }
+h2 { font-size: 17px; }
+a { color: #0000cc; }
+table.formulaire td { padding: 4px 8px; vertical-align: top; }
+table.liste { border-collapse: collapse; }
+table.liste th, table.liste td { border: 1px solid #000; padding: 4px 10px; }
+table.liste th { background: #eee; }
+input[type=text], select { border: 1px solid #666; padding: 2px; }
+button { border: 1px solid #000; background: #eee; padding: 4px 8px; margin: 2px; cursor: pointer; }
+.erreur { color: #cc0000; }
+.ok { color: #007700; }
+.petit { font-size: 11px; color: #555; }
+#cadre-photo { float: right; width: 160px; text-align: center; }
+#apercu { max-width: 150px; max-height: 150px; border: 1px solid #000; display: none; }
+#resultat_js { border: 1px solid #000; padding: 6px; margin-top: 10px; display: none; }

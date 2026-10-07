@@ -1,0 +1,4 @@
+# Sécurité : aucun script ne peut être exécuté depuis ce dossier
+<FilesMatch "\.(php|phtml|php5|phar)$">
+    Require all denied
+</FilesMatch>

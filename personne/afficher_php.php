@@ -17,6 +17,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $plateformes  = post_liste('plateformes', $PLATEFORMES);
 $applications = post_liste('applications', $APPLICATIONS);
+$activites    = post_liste('activites', $ACTIVITES);
+$transport    = $_POST['transport'] ?? '';
+if (!is_string($transport) || !in_array($transport, $TRANSPORTS, true)) {
+    $transport = '';
+}
 
 // On retrouve le libellé de la nationalité à partir de son code
 $libelleNat = '';
@@ -36,6 +41,8 @@ if ($ligne) {
     <tr><td>Pays</td><td><?= h($_POST['pays'] ?? '') ?></td></tr>
     <tr><td>Plateforme(s)</td><td><?= h(implode(', ', $plateformes)) ?></td></tr>
     <tr><td>Application(s)</td><td><?= h(implode(', ', $applications)) ?></td></tr>
+    <tr><td>Moyen de transport</td><td><?= h($transport) ?></td></tr>
+    <tr><td>Activité(s)</td><td><?= h(implode(', ', $activites)) ?></td></tr>
     <tr><td>Nationalité</td><td><?= h($libelleNat) ?> (<?= h($_POST['nationalite'] ?? '') ?>)</td></tr>
 </table>
 <p><a href="formulaire.php">Retour au formulaire</a></p>

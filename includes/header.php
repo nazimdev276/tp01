@@ -17,6 +17,8 @@
         <a href="<?= $base ?>personne/formulaire.php">Formulaire Personne</a> |
         <a href="<?= $base ?>nationalite/nationalite.php">Gestion Nationalités</a> |
         <a href="<?= $base ?>nationalite/liste.php">Liste Nationalités</a> |
+        <a href="<?= $base ?>transport/transport.php">Gestion Transports</a> |
+        <a href="<?= $base ?>transport/liste.php">Liste Transports</a> |
         <a href="<?= $base ?>personne/liste.php">Liste Personnes</a>
     </div>
     <hr>

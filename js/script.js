@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var formNat = document.getElementById('form-nationalite');
     if (formNat) initNationalite(formNat);
+
+    var formTransport = document.getElementById('form-transport');
+    if (formTransport) initTransport(formTransport);
 });
 
 // ---------- Formulaire Personne ----------
@@ -45,6 +48,7 @@ function validerPersonne(form) {
     if (form.adresse.value.trim() === '') erreurs.push("L'adresse est obligatoire.");
     if (!/^[0-9]{4,10}$/.test(form.code_postal.value.trim())) erreurs.push('Code postal invalide.');
     if (form.localite.value.trim() === '') erreurs.push('La localité est obligatoire.');
+    if (!form.transport.value) erreurs.push('Aucun moyen de transport disponible.');
     if (!form.nationalite) erreurs.push("Aucune nationalité disponible : ajoutez-en une d'abord.");
     return erreurs;
 }
@@ -71,6 +75,8 @@ function afficherValeurs(form) {
         ['Pays', form.pays.value],
         ['Plateforme(s)', valeursCochees(form, 'plateformes[]')],
         ['Application(s)', valeursCochees(form, 'applications[]')],
+        ['Moyen de transport', form.transport.value],
+        ['Activité(s)', valeursCochees(form, 'activites[]')],
         ['Nationalité', natTexte]
     ];
 
@@ -97,6 +103,17 @@ function initNationalite(form) {
         if (code === '' || code.length > 3 || libelle === '' || libelle.length > 40) {
             e.preventDefault();
             alert('Code : 1 à 3 caractères. Nationalité : 1 à 40 caractères.');
+        }
+
+        function initTransport(form) {
+            form.addEventListener('submit', function (e) {
+                if (e.submitter && e.submitter.hasAttribute('formnovalidate')) return;
+                var libelle = form.libelle.value.trim();
+                if (libelle === '' || libelle.length > 20) {
+                    e.preventDefault();
+                    alert('Le moyen de transport est obligatoire (20 caractères maximum).');
+                }
+            });
         }
     });
 }

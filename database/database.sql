@@ -25,6 +25,17 @@ INSERT IGNORE INTO nationalite (code, libelle) VALUES
   ('CA', 'CANADA'),
   ('US', 'ETATS-UNIS');
 
+-- Table des moyens de transport
+CREATE TABLE IF NOT EXISTS moyen_transport (
+  libelle VARCHAR(20) NOT NULL PRIMARY KEY
+) ENGINE=InnoDB;
+
+INSERT IGNORE INTO moyen_transport (libelle) VALUES
+  ('Bus'),
+  ('Avion'),
+  ('Bateau'),
+  ('Train');
+
 -- Table des personnes
 -- plateformes et applications : valeurs séparées par des virgules (simple)
 CREATE TABLE IF NOT EXISTS personne (
@@ -38,6 +49,8 @@ CREATE TABLE IF NOT EXISTS personne (
   pays             VARCHAR(40)  NOT NULL,
   plateformes      VARCHAR(100) DEFAULT '',
   applications     VARCHAR(255) DEFAULT '',
+  transport        VARCHAR(20)  NOT NULL DEFAULT '',
+  activites        VARCHAR(100) NOT NULL DEFAULT '',
   nationalite_code VARCHAR(3)   NOT NULL,
   photo            VARCHAR(100) DEFAULT NULL,
   -- Relation : personne.nationalite_code -> nationalite.code
@@ -45,3 +58,8 @@ CREATE TABLE IF NOT EXISTS personne (
     FOREIGN KEY (nationalite_code) REFERENCES nationalite(code)
     ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB;
+
+-- Mise à niveau des bases déjà créées avant l'ajout du transport et des activités
+ALTER TABLE personne
+  ADD COLUMN IF NOT EXISTS transport VARCHAR(20) NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS activites VARCHAR(100) NOT NULL DEFAULT '';

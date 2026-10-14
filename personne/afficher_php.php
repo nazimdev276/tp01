@@ -22,6 +22,15 @@ $transport    = $_POST['transport'] ?? '';
 if (!is_string($transport) || !in_array($transport, $TRANSPORTS, true)) {
     $transport = '';
 }
+$sport = $_POST['sport'] ?? '';
+$sport = is_string($sport) ? $sport : '';
+if ($sport !== '') {
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM sport WHERE libelle = :libelle');
+    $stmt->execute([':libelle' => $sport]);
+    if ($stmt->fetchColumn() == 0) {
+        $sport = '';
+    }
+}
 
 // On retrouve le libellé de la nationalité à partir de son code
 $libelleNat = '';
@@ -42,6 +51,7 @@ if ($ligne) {
     <tr><td>Plateforme(s)</td><td><?= h(implode(', ', $plateformes)) ?></td></tr>
     <tr><td>Application(s)</td><td><?= h(implode(', ', $applications)) ?></td></tr>
     <tr><td>Moyen de transport</td><td><?= h($transport) ?></td></tr>
+    <tr><td>Sport</td><td><?= h($sport) ?></td></tr>
     <tr><td>Activité(s)</td><td><?= h(implode(', ', $activites)) ?></td></tr>
     <tr><td>Nationalité</td><td><?= h($libelleNat) ?> (<?= h($_POST['nationalite'] ?? '') ?>)</td></tr>
 </table>

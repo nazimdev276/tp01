@@ -36,6 +36,10 @@ $stmt = $pdo->prepare('SELECT libelle FROM moyen_transport ORDER BY libelle');
 $stmt->execute();
 $transports = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
+$stmt = $pdo->prepare('SELECT libelle FROM sport ORDER BY libelle');
+$stmt->execute();
+$sports = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
 if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $champPost = static function (string $nom): string {
         $valeur = $_POST[$nom] ?? '';
@@ -50,6 +54,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $localite = $champPost('localite');
     $pays = $champPost('pays');
     $transport = $champPost('transport');
+    $sport = $champPost('sport');
     $natCode = $champPost('nationalite');
     $plateformes = post_liste('plateformes', $PLATEFORMES);
     $applications = post_liste('applications', $APPLICATIONS);
@@ -79,6 +84,9 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!in_array($transport, $transports, true)) {
         $erreurs[] = "Moyen de transport invalide.";
     }
+    if ($sport !== '' && !in_array($sport, $sports, true)) {
+        $erreurs[] = "Sport invalide.";
+    }
 
     $stmt = $pdo->prepare('SELECT COUNT(*) FROM nationalite WHERE code = :code');
     $stmt->execute([':code' => $natCode]);
@@ -103,7 +111,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
                  SET numero = :numero, civilite = :civilite, nom_prenom = :nom,
                      adresse = :adresse, code_postal = :cp, localite = :localite,
                      pays = :pays, plateformes = :plateformes, applications = :applications,
-                     transport = :transport, activites = :activites,
+                     transport = :transport, sport = :sport, activites = :activites,
                      nationalite_code = :nat, photo = :photo
                  WHERE id = :id'
             );
@@ -118,6 +126,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':plateformes' => implode(', ', $plateformes),
                 ':applications' => implode(', ', $applications),
                 ':transport' => $transport,
+                ':sport' => $sport,
                 ':activites' => implode(', ', $activites),
                 ':nat' => $natCode,
                 ':photo' => $photo,
@@ -136,6 +145,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'plateformes' => implode(', ', $plateformes),
                 'applications' => implode(', ', $applications),
                 'transport' => $transport,
+                'sport' => $sport,
                 'activites' => implode(', ', $activites),
                 'nationalite_code' => $natCode,
                 'photo' => $photo,
@@ -156,6 +166,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $personne['plateformes'] = implode(', ', $plateformes);
         $personne['applications'] = implode(', ', $applications);
         $personne['transport'] = $transport;
+        $personne['sport'] = $sport;
         $personne['activites'] = implode(', ', $activites);
         $personne['nationalite_code'] = $natCode;
     }
@@ -218,6 +229,15 @@ require __DIR__ . '/../includes/header.php';
                 <td><select name="transport"><?php foreach ($transports as $transportOption): ?>
                     <option value="<?= h($transportOption) ?>" <?= $personne['transport'] === $transportOption ? 'selected' : '' ?>><?= h($transportOption) ?></option>
                 <?php endforeach; ?></select></td>
+            </tr>
+            <tr>
+                <td>Sport :</td>
+                <td><select name="sport">
+                    <option value="">— Aucun —</option>
+                    <?php foreach ($sports as $sportOption): ?>
+                        <option value="<?= h($sportOption) ?>" <?= ($personne['sport'] ?? '') === $sportOption ? 'selected' : '' ?>><?= h($sportOption) ?></option>
+                    <?php endforeach; ?>
+                </select></td>
             </tr>
             <tr>
                 <td>Activité(s) :</td>

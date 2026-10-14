@@ -36,6 +36,18 @@ INSERT IGNORE INTO moyen_transport (libelle) VALUES
   ('Bateau'),
   ('Train');
 
+-- Table des sports
+CREATE TABLE IF NOT EXISTS sport (
+  libelle VARCHAR(40) NOT NULL PRIMARY KEY
+) ENGINE=InnoDB;
+
+INSERT IGNORE INTO sport (libelle) VALUES
+  ('Football'),
+  ('Basketball'),
+  ('Tennis'),
+  ('Natation'),
+  ('Athlétisme');
+
 -- Table des personnes
 -- plateformes et applications : valeurs séparées par des virgules (simple)
 CREATE TABLE IF NOT EXISTS personne (
@@ -50,6 +62,7 @@ CREATE TABLE IF NOT EXISTS personne (
   plateformes      VARCHAR(100) DEFAULT '',
   applications     VARCHAR(255) DEFAULT '',
   transport        VARCHAR(20)  NOT NULL DEFAULT '',
+  sport            VARCHAR(40)  NOT NULL DEFAULT '',
   activites        VARCHAR(100) NOT NULL DEFAULT '',
   nationalite_code VARCHAR(3)   NOT NULL,
   photo            VARCHAR(100) DEFAULT NULL,
@@ -62,4 +75,5 @@ CREATE TABLE IF NOT EXISTS personne (
 -- Mise à niveau des bases déjà créées avant l'ajout du transport et des activités
 ALTER TABLE personne
   ADD COLUMN IF NOT EXISTS transport VARCHAR(20) NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS sport VARCHAR(40) NOT NULL DEFAULT '',
   ADD COLUMN IF NOT EXISTS activites VARCHAR(100) NOT NULL DEFAULT '';

@@ -19,6 +19,8 @@ $localite   = trim($_POST['localite'] ?? '');
 $pays       = $_POST['pays'] ?? '';
 $natCode    = $_POST['nationalite'] ?? '';
 $transport  = $_POST['transport'] ?? '';
+$sport      = $_POST['sport'] ?? '';
+$sport      = is_string($sport) ? trim($sport) : '';
 $idFormulaire = $_POST['id'] ?? '';
 $plateformes  = post_liste('plateformes', $PLATEFORMES);
 $applications = post_liste('applications', $APPLICATIONS);
@@ -30,6 +32,10 @@ $succes = false;
 $stmt = $pdo->prepare('SELECT libelle FROM moyen_transport');
 $stmt->execute();
 $transports = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+$stmt = $pdo->prepare('SELECT libelle FROM sport');
+$stmt->execute();
+$sports = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
 // 2) Validation
 $erreurs = [];
@@ -53,6 +59,7 @@ if (!preg_match('/^[0-9]{4,10}$/', $codePostal))         $erreurs[] = "Code post
 if ($localite === '' || mb_strlen($localite) > 60)       $erreurs[] = "Localité obligatoire (60 caractères max).";
 if (!in_array($pays, $PAYS, true))                       $erreurs[] = "Pays invalide.";
 if (!is_string($transport) || !in_array($transport, $transports, true)) $erreurs[] = "Moyen de transport invalide.";
+if ($sport !== '' && !in_array($sport, $sports, true)) $erreurs[] = "Sport invalide.";
 
 // La nationalité doit exister dans la table nationalite
 $stmt = $pdo->prepare('SELECT COUNT(*) FROM nationalite WHERE code = :code');
@@ -86,6 +93,7 @@ if (!$erreurs) {
             ':plateformes'  => implode(', ', $plateformes),   // ex: "Windows, Macintosh"
             ':applications' => implode(', ', $applications),  // ex: "Internet, Bureautique"
             ':transport'    => $transport,
+            ':sport'        => $sport,
             ':activites'    => implode(', ', $activites),
             ':nat'          => $natCode,
             ':photo'        => $photo,
@@ -96,7 +104,7 @@ if (!$erreurs) {
                     SET numero = :numero, civilite = :civilite, nom_prenom = :nom,
                         adresse = :adresse, code_postal = :cp, localite = :localite, pays = :pays,
                         plateformes = :plateformes, applications = :applications,
-                        transport = :transport, activites = :activites,
+                        transport = :transport, sport = :sport, activites = :activites,
                         nationalite_code = :nat, photo = :photo
                     WHERE id = :id';
             $valeurs[':id'] = $idPersonne;
@@ -107,10 +115,10 @@ if (!$erreurs) {
             $parametreId = $idPersonne === null ? '' : ':id, ';
             $sql = 'INSERT INTO personne
                     (' . $colonnes . 'numero, civilite, nom_prenom, adresse, code_postal, localite, pays,
-                     plateformes, applications, transport, activites, nationalite_code, photo)
+                     plateformes, applications, transport, sport, activites, nationalite_code, photo)
                     VALUES
                     (' . $parametreId . ':numero, :civilite, :nom, :adresse, :cp, :localite, :pays,
-                     :plateformes, :applications, :transport, :activites, :nat, :photo)';
+                     :plateformes, :applications, :transport, :sport, :activites, :nat, :photo)';
             if ($idPersonne !== null) {
                 $valeurs[':id'] = $idPersonne;
             }

@@ -13,6 +13,10 @@ $stmt = $pdo->prepare('SELECT libelle FROM moyen_transport ORDER BY libelle');
 $stmt->execute();
 $transports = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
+$stmt = $pdo->prepare('SELECT libelle FROM sport ORDER BY libelle');
+$stmt->execute();
+$sports = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
 $idRecherche = $_GET['id'] ?? '';
 $erreurRecherche = null;
 $personne = null;
@@ -133,6 +137,20 @@ require __DIR__ . '/../includes/header.php';
                 </select>
                 <?php if (!$transports): ?>
                     <span class="erreur">Aucun moyen de transport. <a href="../transport/transport.php">En ajouter un</a></span>
+                <?php endif; ?>
+            </td>
+        </tr>
+        <tr>
+            <td>Sport :</td>
+            <td>
+                <select name="sport" id="sport">
+                    <option value="">— Aucun —</option>
+                    <?php foreach ($sports as $sport): ?>
+                        <option value="<?= h($sport) ?>" <?= ($personne['sport'] ?? '') === $sport ? 'selected' : '' ?>><?= h($sport) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <?php if (!$sports): ?>
+                    <span class="erreur">Aucun sport enregistré. <a href="../sport/sport.php">En ajouter un</a></span>
                 <?php endif; ?>
             </td>
         </tr>

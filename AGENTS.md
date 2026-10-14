@@ -31,10 +31,10 @@ Every page must set, **before** `require includes/header.php`:
 
 ## Structure & flow
 
-- One file per action, no router/front controller. `personne/` and `nationalite/` each have form → `enregistrer.php` (POST) + `liste.php`.
+- One file per action, no router/front controller. `personne/`, `nationalite/`, `transport/`, and `sport/` use separate form, POST handler, and list pages.
 - The form's buttons route via `formaction` to different handlers: `enregistrer.php` (save), `afficher_php.php` (echo only), `upload_image.php` (image only), `liste.php` (GET). Keep this pattern; don't merge into one endpoint.
 - `config/database.php` is the single PDO connection (exceptions on, `FETCH_ASSOC`). Pages `require_once` it; never open a second connection.
-- Only dynamic lookup is the nationalité dropdown (table `nationalite`). Everything else comes from static arrays in `includes/donnees.php`.
+- Nationalité, moyen de transport, and sport dropdowns are loaded from the `nationalite`, `moyen_transport`, and `sport` database tables.
 - `plateformes`/`applications` are comma-joined strings in a single column — not join tables.
 - FK `personne.nationalite_code → nationalite(code)` with `ON DELETE RESTRICT`: deleting a used nationality fails at the DB level.
 

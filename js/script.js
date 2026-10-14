@@ -9,6 +9,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     var formTransport = document.getElementById('form-transport');
     if (formTransport) initTransport(formTransport);
+
+    var formSport = document.getElementById('form-sport');
+    if (formSport) initSport(formSport);
 });
 
 // ---------- Formulaire Personne ----------
@@ -76,6 +79,7 @@ function afficherValeurs(form) {
         ['Plateforme(s)', valeursCochees(form, 'plateformes[]')],
         ['Application(s)', valeursCochees(form, 'applications[]')],
         ['Moyen de transport', form.transport.value],
+        ['Sport', form.sport.value],
         ['Activité(s)', valeursCochees(form, 'activites[]')],
         ['Nationalité', natTexte]
     ];
@@ -104,16 +108,27 @@ function initNationalite(form) {
             e.preventDefault();
             alert('Code : 1 à 3 caractères. Nationalité : 1 à 40 caractères.');
         }
+    });
+}
 
-        function initTransport(form) {
-            form.addEventListener('submit', function (e) {
-                if (e.submitter && e.submitter.hasAttribute('formnovalidate')) return;
-                var libelle = form.libelle.value.trim();
-                if (libelle === '' || libelle.length > 20) {
-                    e.preventDefault();
-                    alert('Le moyen de transport est obligatoire (20 caractères maximum).');
-                }
-            });
+function initTransport(form) {
+    form.addEventListener('submit', function (e) {
+        if (e.submitter && e.submitter.hasAttribute('formnovalidate')) return;
+        var libelle = form.libelle.value.trim();
+        if (libelle === '' || libelle.length > 20) {
+            e.preventDefault();
+            alert('Le moyen de transport est obligatoire (20 caractères maximum).');
+        }
+    });
+}
+
+function initSport(form) {
+    form.addEventListener('submit', function (e) {
+        if (e.submitter && e.submitter.hasAttribute('formnovalidate')) return;
+        var libelle = form.libelle.value.trim();
+        if (libelle === '' || libelle.length > 40) {
+            e.preventDefault();
+            alert('Le sport est obligatoire (40 caractères maximum).');
         }
     });
 }

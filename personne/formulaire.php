@@ -59,6 +59,10 @@ require __DIR__ . '/../includes/header.php';
     <p class="erreur"><?= h($erreurRecherche) ?></p>
 <?php elseif ($idRechercheValide !== null && $personne): ?>
     <p class="ok">Personne trouvée : modifiez les champs puis enregistrez.</p>
+    <form method="post" action="supprimer.php" onsubmit="return confirm('Supprimer cette personne définitivement ?');">
+        <input type="hidden" name="id" value="<?= h($personne['id']) ?>">
+        <button type="submit">Supprimer cette personne</button>
+    </form>
 <?php elseif ($idRechercheValide !== null): ?>
     <p>Aucune personne trouvée pour l’ID <?= h($idRechercheValide) ?>. Remplissez les champs pour la créer avec cet ID.</p>
 <?php endif; ?>

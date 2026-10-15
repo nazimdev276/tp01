@@ -53,10 +53,13 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $codePostal = $champPost('code_postal');
     $localite = $champPost('localite');
     $pays = $champPost('pays');
+    $voitures = post_liste('voiture', $VOITURES);
     $transport = $champPost('transport');
+    $groupeSanguin = $champPost('groupe_sanguin');
     $sport = $champPost('sport');
     $natCode = $champPost('nationalite');
     $plateformes = post_liste('plateformes', $PLATEFORMES);
+    $modules = post_liste('modules', $MODULES);
     $applications = post_liste('applications', $APPLICATIONS);
     $activites = post_liste('activites', $ACTIVITES);
 
@@ -84,6 +87,9 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!in_array($transport, $transports, true)) {
         $erreurs[] = "Moyen de transport invalide.";
     }
+    if ($groupeSanguin !== '' && !in_array($groupeSanguin, $GROUPES_SANGUINS, true)) {
+        $erreurs[] = "Groupe sanguin invalide.";
+    }
     if ($sport !== '' && !in_array($sport, $sports, true)) {
         $erreurs[] = "Sport invalide.";
     }
@@ -110,8 +116,9 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'UPDATE personne
                  SET numero = :numero, civilite = :civilite, nom_prenom = :nom,
                      adresse = :adresse, code_postal = :cp, localite = :localite,
-                     pays = :pays, plateformes = :plateformes, applications = :applications,
-                     transport = :transport, sport = :sport, activites = :activites,
+                     pays = :pays, plateformes = :plateformes, modules = :modules, applications = :applications,
+                     voiture = :voiture,
+                     transport = :transport, groupe_sanguin = :groupe_sanguin, sport = :sport, activites = :activites,
                      nationalite_code = :nat, photo = :photo
                  WHERE id = :id'
             );
@@ -124,8 +131,11 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':localite' => $localite,
                 ':pays' => $pays,
                 ':plateformes' => implode(', ', $plateformes),
+                ':modules' => implode(', ', $modules),
                 ':applications' => implode(', ', $applications),
+                ':voiture' => implode(', ', $voitures),
                 ':transport' => $transport,
+                ':groupe_sanguin' => $groupeSanguin,
                 ':sport' => $sport,
                 ':activites' => implode(', ', $activites),
                 ':nat' => $natCode,
@@ -143,8 +153,11 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'localite' => $localite,
                 'pays' => $pays,
                 'plateformes' => implode(', ', $plateformes),
+                'modules' => implode(', ', $modules),
                 'applications' => implode(', ', $applications),
+                'voiture' => implode(', ', $voitures),
                 'transport' => $transport,
+                'groupe_sanguin' => $groupeSanguin,
                 'sport' => $sport,
                 'activites' => implode(', ', $activites),
                 'nationalite_code' => $natCode,
@@ -164,8 +177,11 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $personne['localite'] = $localite;
         $personne['pays'] = $pays;
         $personne['plateformes'] = implode(', ', $plateformes);
+        $personne['modules'] = implode(', ', $modules);
         $personne['applications'] = implode(', ', $applications);
+        $personne['voiture'] = implode(', ', $voitures);
         $personne['transport'] = $transport;
+        $personne['groupe_sanguin'] = $groupeSanguin;
         $personne['sport'] = $sport;
         $personne['activites'] = implode(', ', $activites);
         $personne['nationalite_code'] = $natCode;
@@ -173,7 +189,9 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $plateformesSelectionnees = array_filter(array_map('trim', explode(',', $personne['plateformes'] ?? '')));
+$modulesSelectionnes = array_filter(array_map('trim', explode(',', $personne['modules'] ?? '')));
 $applicationsSelectionnees = array_filter(array_map('trim', explode(',', $personne['applications'] ?? '')));
+$voituresSelectionnees = array_filter(array_map('trim', explode(',', $personne['voiture'] ?? '')));
 $activitesSelectionnees = array_filter(array_map('trim', explode(',', $personne['activites'] ?? '')));
 
 $base = '../';
@@ -219,16 +237,39 @@ require __DIR__ . '/../includes/header.php';
                 <?php endforeach; ?></td>
             </tr>
             <tr>
+                <td>Module(s) :</td>
+                <td><?php foreach ($MODULES as $module): ?>
+                    <label><input type="checkbox" name="modules[]" value="<?= h($module) ?>" <?= in_array($module, $modulesSelectionnes, true) ? 'checked' : '' ?>> <?= h($module) ?></label>
+                <?php endforeach; ?></td>
+            </tr>
+            <tr>
                 <td>Application(s) :</td>
                 <td><?php foreach ($APPLICATIONS as $application): ?>
                     <label><input type="checkbox" name="applications[]" value="<?= h($application) ?>" <?= in_array($application, $applicationsSelectionnees, true) ? 'checked' : '' ?>> <?= h($application) ?></label><br>
                 <?php endforeach; ?></td>
             </tr>
             <tr>
+                <td>Voiture(s) :</td>
+                <td><select name="voiture[]" multiple>
+                    <?php foreach ($VOITURES as $voitureOption): ?>
+                        <option value="<?= h($voitureOption) ?>" <?= in_array($voitureOption, $voituresSelectionnees, true) ? 'selected' : '' ?>><?= h($voitureOption) ?></option>
+                    <?php endforeach; ?>
+                </select></td>
+            </tr>
+            <tr>
                 <td>Moyen de transport :</td>
                 <td><select name="transport"><?php foreach ($transports as $transportOption): ?>
                     <option value="<?= h($transportOption) ?>" <?= $personne['transport'] === $transportOption ? 'selected' : '' ?>><?= h($transportOption) ?></option>
                 <?php endforeach; ?></select></td>
+            </tr>
+            <tr>
+                <td>Groupe sanguin :</td>
+                <td><select name="groupe_sanguin">
+                    <option value="">— Non renseigné —</option>
+                    <?php foreach ($GROUPES_SANGUINS as $groupeSanguinOption): ?>
+                        <option value="<?= h($groupeSanguinOption) ?>" <?= ($personne['groupe_sanguin'] ?? '') === $groupeSanguinOption ? 'selected' : '' ?>><?= h($groupeSanguinOption) ?></option>
+                    <?php endforeach; ?>
+                </select></td>
             </tr>
             <tr>
                 <td>Sport :</td>

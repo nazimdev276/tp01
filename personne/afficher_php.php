@@ -16,11 +16,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $plateformes  = post_liste('plateformes', $PLATEFORMES);
+$modules      = post_liste('modules', $MODULES);
 $applications = post_liste('applications', $APPLICATIONS);
+$voitures     = post_liste('voiture', $VOITURES);
 $activites    = post_liste('activites', $ACTIVITES);
 $transport    = $_POST['transport'] ?? '';
 if (!is_string($transport) || !in_array($transport, $TRANSPORTS, true)) {
     $transport = '';
+}
+$groupeSanguin = $_POST['groupe_sanguin'] ?? '';
+if (!is_string($groupeSanguin) || !in_array($groupeSanguin, $GROUPES_SANGUINS, true)) {
+    $groupeSanguin = '';
 }
 $sport = $_POST['sport'] ?? '';
 $sport = is_string($sport) ? $sport : '';
@@ -49,8 +55,11 @@ if ($ligne) {
     <tr><td>No postal / Localité</td><td><?= h($_POST['code_postal'] ?? '') ?> <?= h($_POST['localite'] ?? '') ?></td></tr>
     <tr><td>Pays</td><td><?= h($_POST['pays'] ?? '') ?></td></tr>
     <tr><td>Plateforme(s)</td><td><?= h(implode(', ', $plateformes)) ?></td></tr>
+    <tr><td>Module(s)</td><td><?= h(implode(', ', $modules)) ?></td></tr>
     <tr><td>Application(s)</td><td><?= h(implode(', ', $applications)) ?></td></tr>
+    <tr><td>Voiture(s)</td><td><?= h(implode(', ', $voitures)) ?></td></tr>
     <tr><td>Moyen de transport</td><td><?= h($transport) ?></td></tr>
+    <tr><td>Groupe sanguin</td><td><?= h($groupeSanguin) ?></td></tr>
     <tr><td>Sport</td><td><?= h($sport) ?></td></tr>
     <tr><td>Activité(s)</td><td><?= h(implode(', ', $activites)) ?></td></tr>
     <tr><td>Nationalité</td><td><?= h($libelleNat) ?> (<?= h($_POST['nationalite'] ?? '') ?>)</td></tr>

@@ -77,8 +77,13 @@ function afficherValeurs(form) {
         ['No postal / Localité', form.code_postal.value + ' ' + form.localite.value],
         ['Pays', form.pays.value],
         ['Plateforme(s)', valeursCochees(form, 'plateformes[]')],
+        ['Module(s)', valeursCochees(form, 'modules[]')],
         ['Application(s)', valeursCochees(form, 'applications[]')],
+        ['Voiture(s)', Array.prototype.map.call(form.querySelectorAll('select[name="voiture[]"] option:checked'), function (option) {
+            return option.value;
+        }).join(', ')],
         ['Moyen de transport', form.transport.value],
+        ['Groupe sanguin', form.groupe_sanguin.value],
         ['Sport', form.sport.value],
         ['Activité(s)', valeursCochees(form, 'activites[]')],
         ['Nationalité', natTexte]

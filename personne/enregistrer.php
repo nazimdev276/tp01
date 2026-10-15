@@ -19,11 +19,15 @@ $localite   = trim($_POST['localite'] ?? '');
 $pays       = $_POST['pays'] ?? '';
 $natCode    = $_POST['nationalite'] ?? '';
 $transport  = $_POST['transport'] ?? '';
+$groupeSanguin = $_POST['groupe_sanguin'] ?? '';
 $sport      = $_POST['sport'] ?? '';
+$groupeSanguin = is_string($groupeSanguin) ? trim($groupeSanguin) : '';
 $sport      = is_string($sport) ? trim($sport) : '';
 $idFormulaire = $_POST['id'] ?? '';
 $plateformes  = post_liste('plateformes', $PLATEFORMES);
+$modules      = post_liste('modules', $MODULES);
 $applications = post_liste('applications', $APPLICATIONS);
+$voitures     = post_liste('voiture', $VOITURES);
 $activites    = post_liste('activites', $ACTIVITES);
 $idPersonne = null;
 $personneExistante = null;
@@ -59,6 +63,7 @@ if (!preg_match('/^[0-9]{4,10}$/', $codePostal))         $erreurs[] = "Code post
 if ($localite === '' || mb_strlen($localite) > 60)       $erreurs[] = "Localité obligatoire (60 caractères max).";
 if (!in_array($pays, $PAYS, true))                       $erreurs[] = "Pays invalide.";
 if (!is_string($transport) || !in_array($transport, $transports, true)) $erreurs[] = "Moyen de transport invalide.";
+if ($groupeSanguin !== '' && !in_array($groupeSanguin, $GROUPES_SANGUINS, true)) $erreurs[] = "Groupe sanguin invalide.";
 if ($sport !== '' && !in_array($sport, $sports, true)) $erreurs[] = "Sport invalide.";
 
 // La nationalité doit exister dans la table nationalite
@@ -91,8 +96,11 @@ if (!$erreurs) {
             ':localite'     => $localite,
             ':pays'         => $pays,
             ':plateformes'  => implode(', ', $plateformes),   // ex: "Windows, Macintosh"
+            ':modules'      => implode(', ', $modules),
             ':applications' => implode(', ', $applications),  // ex: "Internet, Bureautique"
+            ':voiture'      => implode(', ', $voitures),
             ':transport'    => $transport,
+            ':groupe_sanguin' => $groupeSanguin,
             ':sport'        => $sport,
             ':activites'    => implode(', ', $activites),
             ':nat'          => $natCode,
@@ -103,8 +111,9 @@ if (!$erreurs) {
             $sql = 'UPDATE personne
                     SET numero = :numero, civilite = :civilite, nom_prenom = :nom,
                         adresse = :adresse, code_postal = :cp, localite = :localite, pays = :pays,
-                        plateformes = :plateformes, applications = :applications,
-                        transport = :transport, sport = :sport, activites = :activites,
+                        plateformes = :plateformes, modules = :modules, applications = :applications,
+                        voiture = :voiture,
+                        transport = :transport, groupe_sanguin = :groupe_sanguin, sport = :sport, activites = :activites,
                         nationalite_code = :nat, photo = :photo
                     WHERE id = :id';
             $valeurs[':id'] = $idPersonne;
@@ -115,10 +124,10 @@ if (!$erreurs) {
             $parametreId = $idPersonne === null ? '' : ':id, ';
             $sql = 'INSERT INTO personne
                     (' . $colonnes . 'numero, civilite, nom_prenom, adresse, code_postal, localite, pays,
-                     plateformes, applications, transport, sport, activites, nationalite_code, photo)
+                     plateformes, modules, applications, voiture, transport, groupe_sanguin, sport, activites, nationalite_code, photo)
                     VALUES
                     (' . $parametreId . ':numero, :civilite, :nom, :adresse, :cp, :localite, :pays,
-                     :plateformes, :applications, :transport, :sport, :activites, :nat, :photo)';
+                     :plateformes, :modules, :applications, :voiture, :transport, :groupe_sanguin, :sport, :activites, :nat, :photo)';
             if ($idPersonne !== null) {
                 $valeurs[':id'] = $idPersonne;
             }

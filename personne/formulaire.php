@@ -42,7 +42,9 @@ if ($idRecherche !== '') {
 }
 
 $plateformesSelectionnees = array_filter(array_map('trim', explode(',', $personne['plateformes'] ?? '')));
+$modulesSelectionnes = array_filter(array_map('trim', explode(',', $personne['modules'] ?? '')));
 $applicationsSelectionnees = array_filter(array_map('trim', explode(',', $personne['applications'] ?? '')));
+$voituresSelectionnees = array_filter(array_map('trim', explode(',', $personne['voiture'] ?? '')));
 $activitesSelectionnees = array_filter(array_map('trim', explode(',', $personne['activites'] ?? '')));
 
 $base  = '../';
@@ -124,11 +126,29 @@ require __DIR__ . '/../includes/header.php';
             </td>
         </tr>
         <tr>
+            <td>Module(s) :</td>
+            <td>
+                <?php foreach ($MODULES as $module): ?>
+                    <label><input type="checkbox" name="modules[]" value="<?= h($module) ?>" <?= in_array($module, $modulesSelectionnes, true) ? 'checked' : '' ?>> <?= h($module) ?></label>
+                <?php endforeach; ?>
+            </td>
+        </tr>
+        <tr>
             <td>Application(s) :</td>
             <td>
                 <?php foreach ($APPLICATIONS as $a): ?>
                     <label><input type="checkbox" name="applications[]" value="<?= h($a) ?>" <?= in_array($a, $applicationsSelectionnees, true) ? 'checked' : '' ?>> <?= h($a) ?></label><br>
                 <?php endforeach; ?>
+            </td>
+        </tr>
+        <tr>
+            <td>Voiture(s) :</td>
+            <td>
+                <select name="voiture[]" id="voiture" multiple>
+                    <?php foreach ($VOITURES as $voitureOption): ?>
+                        <option value="<?= h($voitureOption) ?>" <?= in_array($voitureOption, $voituresSelectionnees, true) ? 'selected' : '' ?>><?= h($voitureOption) ?></option>
+                    <?php endforeach; ?>
+                </select>
             </td>
         </tr>
         <tr>
@@ -142,6 +162,17 @@ require __DIR__ . '/../includes/header.php';
                 <?php if (!$transports): ?>
                     <span class="erreur">Aucun moyen de transport. <a href="../transport/transport.php">En ajouter un</a></span>
                 <?php endif; ?>
+            </td>
+        </tr>
+        <tr>
+            <td>Groupe sanguin :</td>
+            <td>
+                <select name="groupe_sanguin" id="groupe_sanguin">
+                    <option value="">— Non renseigné —</option>
+                    <?php foreach ($GROUPES_SANGUINS as $groupeSanguin): ?>
+                        <option value="<?= h($groupeSanguin) ?>" <?= ($personne['groupe_sanguin'] ?? '') === $groupeSanguin ? 'selected' : '' ?>><?= h($groupeSanguin) ?></option>
+                    <?php endforeach; ?>
+                </select>
             </td>
         </tr>
         <tr>

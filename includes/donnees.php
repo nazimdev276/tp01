@@ -4,5 +4,8 @@
 $CIVILITES    = ['Monsieur', 'Madame', 'Mademoiselle'];
 $PAYS         = ['Algérie', 'France', 'Belgique', 'Tunisie', 'Maroc', 'Allemagne', 'Italie', 'Espagne', 'Canada', 'États-Unis'];
 $PLATEFORMES  = ['Windows', 'Macintosh', 'Unix'];
+$MODULES     = ['BDD', 'algo', 'archy'];
 $APPLICATIONS = ['DAO', 'Statistiques', 'Internet', 'Bureautique'];
+$VOITURES = ['SMV', 'fiat', 'pejout'];
+$GROUPES_SANGUINS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 $ACTIVITES    = ['Théâtre', 'Jardiner', 'Marcher'];

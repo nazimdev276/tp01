@@ -49,7 +49,7 @@ INSERT IGNORE INTO sport (libelle) VALUES
   ('Athlétisme');
 
 -- Table des personnes
--- plateformes et applications : valeurs séparées par des virgules (simple)
+-- plateformes, modules et applications : valeurs séparées par des virgules (simple)
 CREATE TABLE IF NOT EXISTS personne (
   id               INT AUTO_INCREMENT PRIMARY KEY,
   numero           VARCHAR(10)  NOT NULL,
@@ -60,8 +60,11 @@ CREATE TABLE IF NOT EXISTS personne (
   localite         VARCHAR(60)  NOT NULL,
   pays             VARCHAR(40)  NOT NULL,
   plateformes      VARCHAR(100) DEFAULT '',
+  modules          VARCHAR(100) NOT NULL DEFAULT '',
   applications     VARCHAR(255) DEFAULT '',
+  voiture          VARCHAR(100) NOT NULL DEFAULT '',
   transport        VARCHAR(20)  NOT NULL DEFAULT '',
+  groupe_sanguin   VARCHAR(3)   NOT NULL DEFAULT '',
   sport            VARCHAR(40)  NOT NULL DEFAULT '',
   activites        VARCHAR(100) NOT NULL DEFAULT '',
   nationalite_code VARCHAR(3)   NOT NULL,
@@ -72,8 +75,14 @@ CREATE TABLE IF NOT EXISTS personne (
     ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
--- Mise à niveau des bases déjà créées avant l'ajout du transport et des activités
+-- Mise à niveau des bases déjà créées avant l'ajout des modules, de la voiture, du groupe sanguin, du transport et des activités
 ALTER TABLE personne
+  ADD COLUMN IF NOT EXISTS modules VARCHAR(100) NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS voiture VARCHAR(100) NOT NULL DEFAULT '',
   ADD COLUMN IF NOT EXISTS transport VARCHAR(20) NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS groupe_sanguin VARCHAR(3) NOT NULL DEFAULT '',
   ADD COLUMN IF NOT EXISTS sport VARCHAR(40) NOT NULL DEFAULT '',
   ADD COLUMN IF NOT EXISTS activites VARCHAR(100) NOT NULL DEFAULT '';
+
+ALTER TABLE personne
+  MODIFY COLUMN voiture VARCHAR(100) NOT NULL DEFAULT '';

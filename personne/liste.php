@@ -54,7 +54,7 @@ require __DIR__ . '/../includes/header.php';
     <table class="liste">
         <tr>
             <th>ID</th><th>N°</th><th>Civilité</th><th>Nom / Prénom</th><th>Adresse</th><th>CP / Localité</th>
-            <th>Pays</th><th>Plateformes</th><th>Applications</th><th>Transport</th><th>Sport</th><th>Activités</th><th>Nationalité</th><th>Photo</th><th>Action</th>
+            <th>Pays</th><th>Plateformes</th><th>Modules</th><th>Applications</th><th>Voiture</th><th>Transport</th><th>Groupe sanguin</th><th>Sport</th><th>Activités</th><th>Nationalité</th><th>Photo</th><th>Action</th>
         </tr>
         <?php foreach ($personnes as $p): ?>
             <tr>
@@ -66,8 +66,11 @@ require __DIR__ . '/../includes/header.php';
                 <td><?= h($p['code_postal']) ?> <?= h($p['localite']) ?></td>
                 <td><?= h($p['pays']) ?></td>
                 <td><?= h($p['plateformes']) ?></td>
+                <td><?= h($p['modules']) ?></td>
                 <td><?= h($p['applications']) ?></td>
+                <td><?= h($p['voiture']) ?></td>
                 <td><?= h($p['transport']) ?></td>
+                <td><?= h($p['groupe_sanguin']) ?></td>
                 <td><?= h($p['sport']) ?></td>
                 <td><?= h($p['activites']) ?></td>
                 <td><?= h($p['nationalite']) ?></td>

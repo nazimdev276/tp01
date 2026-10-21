@@ -11,22 +11,29 @@
 </head>
 <body>
 <div id="page">
-    <h1>TP01 – PAW</h1>
-    <nav id="menu" aria-label="Menu principal">
-        <ul class="menu-bar">
+    <header class="site-header">
+        <a class="site-brand" href="<?= $base ?>index.php">
+            <span class="brand-mark" aria-hidden="true">TP</span>
+            <span><strong>TP01</strong><small>PAW · Gestion universitaire</small></span>
+        </a>
+    </header>
+    <nav class="navbar" aria-label="Navigation principale">
+        <ul class="navbar-links">
             <li><a href="<?= $base ?>index.php">Accueil</a></li>
-            <li><a href="<?= $base ?>personne/formulaire.php">Etudiants</a></li>
+            <li><a href="<?= $base ?>personne/formulaire.php">Étudiants</a></li>
             <li><a href="<?= $base ?>enseignant/enseignant.php">Enseignants</a></li>
             <li><a href="<?= $base ?>module/module.php">Modules</a></li>
-            <li class="dropdown">
-                <span class="dropdown-label">Tables</span>
-                <ul class="submenu">
-                    <li><a href="<?= $base ?>nationalite/nationalite.php">Nationalité</a></li>
-                    <li><a href="<?= $base ?>sport/sport.php">Sports</a></li>
-                    <li><a href="<?= $base ?>filiere/filiere.php">Filières</a></li>
-                </ul>
+            <li>
+                <details class="nav-dropdown">
+                    <summary>Tables</summary>
+                    <ul class="submenu">
+                        <li><a href="<?= $base ?>nationalite/nationalite.php">Nationalités</a></li>
+                        <li><a href="<?= $base ?>sport/sport.php">Sports</a></li>
+                        <li><a href="<?= $base ?>filiere/filiere.php">Filières</a></li>
+                    </ul>
+                </details>
             </li>
         </ul>
     </nav>
-    <hr>
-    <h2><?= h($titre) ?></h2>
+    <main>
+        <h1 class="page-title"><?= h($titre) ?></h1>

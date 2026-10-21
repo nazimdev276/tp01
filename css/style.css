@@ -1,31 +1,154 @@
-/* css/style.css : style volontairement très simple */
-body { background: #fff; font-family: Arial, sans-serif; font-size: 14px; margin: 10px; }
-#page { max-width: 960px; margin: auto; }
-h1 { font-size: 20px; }
-h2 { font-size: 17px; }
-a { color: #0000cc; }
-#menu { margin-bottom: 12px; }
-.menu-bar {
-    list-style: none; display: flex; gap: 16px; align-items: center; padding: 0; margin: 0;
-    background: #f4f4f4; border: 1px solid #ddd; padding: 8px 12px; border-radius: 4px;
+:root {
+    color-scheme: light;
+    --ink: #243247;
+    --muted: #68778b;
+    --primary: #2459a6;
+    --primary-dark: #19447f;
+    --line: #dce3ec;
+    --surface: #fff;
+    --background: #f3f6fa;
 }
-.menu-bar > li { position: relative; }
-.dropdown-label { cursor: pointer; color: #0000cc; }
+
+* { box-sizing: border-box; }
+body {
+    background: var(--background);
+    color: var(--ink);
+    font-family: Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    margin: 0;
+}
+#page { max-width: 1100px; margin: 0 auto; padding: 24px; }
+.site-header { margin-bottom: 18px; }
+.site-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--ink);
+    text-decoration: none;
+}
+.brand-mark {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border-radius: 12px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+}
+.site-brand strong, .site-brand small { display: block; }
+.site-brand strong { font-size: 18px; line-height: 1.2; }
+.site-brand small { color: var(--muted); font-size: 12px; }
+
+.navbar {
+    position: relative;
+    z-index: 2;
+    margin-bottom: 28px;
+    border-radius: 10px;
+    background: var(--primary);
+    box-shadow: 0 3px 10px rgb(34 66 110 / 12%);
+}
+.navbar-links {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 52px;
+    margin: 0;
+    padding: 6px 10px;
+    list-style: none;
+}
+.navbar-links > li { position: relative; }
+.navbar-links a, .nav-dropdown summary {
+    display: block;
+    padding: 9px 13px;
+    border-radius: 7px;
+    color: #fff;
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+.navbar-links a:hover, .navbar-links a:focus-visible,
+.nav-dropdown summary:hover, .nav-dropdown summary:focus-visible,
+.nav-dropdown[open] summary {
+    outline: none;
+    background: var(--primary-dark);
+}
+.nav-dropdown summary { list-style: none; }
+.nav-dropdown summary::-webkit-details-marker { display: none; }
+.nav-dropdown summary::after { content: " ▾"; font-size: 12px; }
 .submenu {
-    display: none; position: absolute; top: 100%; left: 0; list-style: none; background: #fff;
-    border: 1px solid #ccc; padding: 8px 10px; min-width: 140px; z-index: 10;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 180px;
+    margin: 0;
+    padding: 6px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: 0 8px 20px rgb(32 49 72 / 14%);
+    list-style: none;
 }
-.dropdown:hover .submenu, .dropdown:focus-within .submenu { display: block; }
-.submenu li { margin: 6px 0; }
-table.formulaire td { padding: 4px 8px; vertical-align: top; }
-table.liste { border-collapse: collapse; }
-table.liste th, table.liste td { border: 1px solid #000; padding: 4px 10px; }
-table.liste th { background: #eee; }
-input[type=text], select { border: 1px solid #666; padding: 2px; }
-button { border: 1px solid #000; background: #eee; padding: 4px 8px; margin: 2px; cursor: pointer; }
-.erreur { color: #cc0000; }
-.ok { color: #007700; }
-.petit { font-size: 11px; color: #555; }
+.submenu a { color: var(--ink); }
+.submenu a:hover, .submenu a:focus-visible { background: #edf3fb; color: var(--primary-dark); }
+
+main {
+    min-height: 300px;
+    padding: 24px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+    box-shadow: 0 3px 12px rgb(32 49 72 / 5%);
+}
+.page-title { margin: 0 0 22px; font-size: 22px; line-height: 1.3; }
+h2 { font-size: 18px; }
+a { color: var(--primary); }
+table.formulaire td { padding: 6px 10px 6px 0; vertical-align: top; }
+table.liste { width: 100%; border-collapse: collapse; }
+table.liste th, table.liste td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; }
+table.liste th { background: #f0f4f9; color: var(--ink); }
+table.liste tr:nth-child(even) td { background: #fafbfd; }
+input[type=text], input[type=number], input[type=date], input[type=file], select, textarea {
+    max-width: 100%;
+    border: 1px solid #b9c5d3;
+    border-radius: 5px;
+    background: #fff;
+    color: var(--ink);
+    font: inherit;
+    padding: 7px 9px;
+}
+input:focus, select:focus, textarea:focus {
+    border-color: var(--primary);
+    outline: 2px solid rgb(36 89 166 / 15%);
+}
+button, input[type=submit] {
+    border: 1px solid var(--primary);
+    border-radius: 5px;
+    background: var(--primary);
+    color: #fff;
+    font: inherit;
+    padding: 7px 12px;
+    margin: 3px 3px 3px 0;
+    cursor: pointer;
+}
+button:hover, input[type=submit]:hover { background: var(--primary-dark); }
+.erreur { color: #b42318; }
+.ok { color: #187044; }
+.petit { color: var(--muted); font-size: 12px; }
 #cadre-photo { float: right; width: 160px; text-align: center; }
-#apercu { max-width: 150px; max-height: 150px; border: 1px solid #000; display: none; }
-#resultat_js { border: 1px solid #000; padding: 6px; margin-top: 10px; display: none; }
+#apercu { max-width: 150px; max-height: 150px; border: 1px solid var(--line); display: none; }
+#resultat_js { border: 1px solid var(--line); border-radius: 6px; padding: 10px; margin-top: 10px; display: none; }
+.site-footer { padding: 18px 4px 4px; color: var(--muted); font-size: 12px; }
+
+@media (max-width: 640px) {
+    #page { padding: 14px; }
+    .navbar-links { align-items: stretch; flex-direction: column; gap: 0; padding: 6px; }
+    .navbar-links > li { width: 100%; }
+    .navbar-links a, .nav-dropdown summary { padding: 9px 11px; }
+    .submenu { position: static; margin: 0 8px 6px; box-shadow: none; }
+    main { padding: 16px; }
+    table.formulaire, table.liste { font-size: 13px; }
+    table.liste { display: block; overflow-x: auto; }
+}

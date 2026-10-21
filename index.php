@@ -5,8 +5,8 @@ $base  = '';
 $titre = 'Accueil';
 require __DIR__ . '/includes/header.php';
 ?>
-<p>Application de saisie des personnes et des enseignants, avec gestion des nationalités, filières, transports et sports.</p>
-<ol>
+<p class="home-intro">Application de saisie des personnes et des enseignants, avec gestion des nationalités, filières, transports et sports.</p>
+<ol class="home-links">
     <li><a href="nationalite/nationalite.php">Gestion Nationalités</a> : ajouter une nationalité (ex. DZ / ALGERIE).</li>
     <li><a href="filiere/filiere.php">Gestion Filières</a> : ajouter une filière d’inscription (ex. M2RSSI / 4ING).</li>
     <li><a href="module/module.php">Gestion Modules</a> : enregistrer un module associé à une filière.</li>

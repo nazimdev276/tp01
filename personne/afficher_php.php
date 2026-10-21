@@ -46,6 +46,17 @@ $ligne = $stmt->fetch();
 if ($ligne) {
     $libelleNat = $ligne['libelle'];
 }
+
+$libelleFiliere = '';
+$filiereCode = $_POST['filiere'] ?? '';
+if (is_string($filiereCode)) {
+    $stmt = $pdo->prepare('SELECT libelle FROM filiere WHERE code = :code');
+    $stmt->execute([':code' => $filiereCode]);
+    $ligne = $stmt->fetch();
+    if ($ligne) {
+        $libelleFiliere = $ligne['libelle'];
+    }
+}
 ?>
 <table class="liste">
     <tr><td>Numéro</td><td><?= h($_POST['numero'] ?? '') ?></td></tr>
@@ -54,6 +65,7 @@ if ($ligne) {
     <tr><td>Adresse</td><td><?= h($_POST['adresse'] ?? '') ?></td></tr>
     <tr><td>No postal / Localité</td><td><?= h($_POST['code_postal'] ?? '') ?> <?= h($_POST['localite'] ?? '') ?></td></tr>
     <tr><td>Pays</td><td><?= h($_POST['pays'] ?? '') ?></td></tr>
+    <tr><td>Filière d’inscription</td><td><?= h($libelleFiliere) ?></td></tr>
     <tr><td>Plateforme(s)</td><td><?= h(implode(', ', $plateformes)) ?></td></tr>
     <tr><td>Module(s)</td><td><?= h(implode(', ', $modules)) ?></td></tr>
     <tr><td>Application(s)</td><td><?= h(implode(', ', $applications)) ?></td></tr>

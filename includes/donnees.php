@@ -9,3 +9,5 @@ $APPLICATIONS = ['DAO', 'Statistiques', 'Internet', 'Bureautique'];
 $VOITURES = ['SMV', 'fiat', 'pejout'];
 $GROUPES_SANGUINS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 $ACTIVITES    = ['Théâtre', 'Jardiner', 'Marcher'];
+$GRADES_ENSEIGNANT = ['Assistant', 'MAB', 'MAA', 'MCB', 'MCA', 'Professeur'];
+$SPECIALITES_ENSEIGNANT = ['Informatique', 'Mathématiques', 'Anglais', 'Autres'];

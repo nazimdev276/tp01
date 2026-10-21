@@ -9,6 +9,10 @@ $stmt = $pdo->prepare('SELECT code, libelle FROM nationalite ORDER BY libelle');
 $stmt->execute();
 $nationalites = $stmt->fetchAll();
 
+$stmt = $pdo->prepare('SELECT code, libelle FROM filiere ORDER BY code');
+$stmt->execute();
+$filieres = $stmt->fetchAll();
+
 $stmt = $pdo->prepare('SELECT libelle FROM moyen_transport ORDER BY libelle');
 $stmt->execute();
 $transports = $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -115,6 +119,21 @@ require __DIR__ . '/../includes/header.php';
                         <option value="<?= h($p) ?>" <?= ($personne['pays'] ?? '') === $p ? 'selected' : '' ?>><?= h($p) ?></option>
                     <?php endforeach; ?>
                 </select>
+            </td>
+        </tr>
+        <tr>
+            <td>Filière d’inscription :</td>
+            <td>
+                <?php if (!$filieres): ?>
+                    <span class="erreur">Aucune filière enregistrée.</span>
+                <?php else: ?>
+                    <select name="filiere" id="filiere" required>
+                        <option value="">— Choisir une filière —</option>
+                        <?php foreach ($filieres as $filiere): ?>
+                            <option value="<?= h($filiere['code']) ?>" <?= ($personne['filiere_code'] ?? '') === $filiere['code'] ? 'selected' : '' ?>><?= h($filiere['libelle']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php endif; ?>
             </td>
         </tr>
         <tr>

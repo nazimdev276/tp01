@@ -18,6 +18,7 @@ $codePostal = trim($_POST['code_postal'] ?? '');
 $localite   = trim($_POST['localite'] ?? '');
 $pays       = $_POST['pays'] ?? '';
 $natCode    = $_POST['nationalite'] ?? '';
+$filiereCode = $_POST['filiere'] ?? '';
 $transport  = $_POST['transport'] ?? '';
 $groupeSanguin = $_POST['groupe_sanguin'] ?? '';
 $sport      = $_POST['sport'] ?? '';
@@ -36,6 +37,10 @@ $succes = false;
 $stmt = $pdo->prepare('SELECT libelle FROM moyen_transport');
 $stmt->execute();
 $transports = $stmt->fetchAll(PDO::FETCH_COLUMN);
+
+$stmt = $pdo->prepare('SELECT code FROM filiere');
+$stmt->execute();
+$filieres = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
 $stmt = $pdo->prepare('SELECT libelle FROM sport');
 $stmt->execute();
@@ -62,6 +67,7 @@ if ($adresse === '' || mb_strlen($adresse) > 150)        $erreurs[] = "Adresse o
 if (!preg_match('/^[0-9]{4,10}$/', $codePostal))         $erreurs[] = "Code postal invalide.";
 if ($localite === '' || mb_strlen($localite) > 60)       $erreurs[] = "Localité obligatoire (60 caractères max).";
 if (!in_array($pays, $PAYS, true))                       $erreurs[] = "Pays invalide.";
+if (!is_string($filiereCode) || !in_array($filiereCode, $filieres, true)) $erreurs[] = "Filière d’inscription invalide.";
 if (!is_string($transport) || !in_array($transport, $transports, true)) $erreurs[] = "Moyen de transport invalide.";
 if ($groupeSanguin !== '' && !in_array($groupeSanguin, $GROUPES_SANGUINS, true)) $erreurs[] = "Groupe sanguin invalide.";
 if ($sport !== '' && !in_array($sport, $sports, true)) $erreurs[] = "Sport invalide.";
@@ -104,6 +110,7 @@ if (!$erreurs) {
             ':sport'        => $sport,
             ':activites'    => implode(', ', $activites),
             ':nat'          => $natCode,
+            ':filiere'      => $filiereCode,
             ':photo'        => $photo,
         ];
 
@@ -114,7 +121,7 @@ if (!$erreurs) {
                         plateformes = :plateformes, modules = :modules, applications = :applications,
                         voiture = :voiture,
                         transport = :transport, groupe_sanguin = :groupe_sanguin, sport = :sport, activites = :activites,
-                        nationalite_code = :nat, photo = :photo
+                        nationalite_code = :nat, filiere_code = :filiere, photo = :photo
                     WHERE id = :id';
             $valeurs[':id'] = $idPersonne;
             $stmt = $pdo->prepare($sql);
@@ -124,10 +131,10 @@ if (!$erreurs) {
             $parametreId = $idPersonne === null ? '' : ':id, ';
             $sql = 'INSERT INTO personne
                     (' . $colonnes . 'numero, civilite, nom_prenom, adresse, code_postal, localite, pays,
-                     plateformes, modules, applications, voiture, transport, groupe_sanguin, sport, activites, nationalite_code, photo)
+                     plateformes, modules, applications, voiture, transport, groupe_sanguin, sport, activites, nationalite_code, filiere_code, photo)
                     VALUES
                     (' . $parametreId . ':numero, :civilite, :nom, :adresse, :cp, :localite, :pays,
-                     :plateformes, :modules, :applications, :voiture, :transport, :groupe_sanguin, :sport, :activites, :nat, :photo)';
+                     :plateformes, :modules, :applications, :voiture, :transport, :groupe_sanguin, :sport, :activites, :nat, :filiere, :photo)';
             if ($idPersonne !== null) {
                 $valeurs[':id'] = $idPersonne;
             }

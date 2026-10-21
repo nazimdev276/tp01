@@ -32,6 +32,10 @@ $stmt = $pdo->prepare('SELECT code, libelle FROM nationalite ORDER BY libelle');
 $stmt->execute();
 $nationalites = $stmt->fetchAll();
 
+$stmt = $pdo->prepare('SELECT code, libelle FROM filiere ORDER BY code');
+$stmt->execute();
+$filieres = $stmt->fetchAll();
+
 $stmt = $pdo->prepare('SELECT libelle FROM moyen_transport ORDER BY libelle');
 $stmt->execute();
 $transports = $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -58,6 +62,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $groupeSanguin = $champPost('groupe_sanguin');
     $sport = $champPost('sport');
     $natCode = $champPost('nationalite');
+    $filiereCode = $champPost('filiere');
     $plateformes = post_liste('plateformes', $PLATEFORMES);
     $modules = post_liste('modules', $MODULES);
     $applications = post_liste('applications', $APPLICATIONS);
@@ -83,6 +88,9 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if (!in_array($pays, $PAYS, true)) {
         $erreurs[] = "Pays invalide.";
+    }
+    if (!in_array($filiereCode, array_column($filieres, 'code'), true)) {
+        $erreurs[] = "Filière d’inscription invalide.";
     }
     if (!in_array($transport, $transports, true)) {
         $erreurs[] = "Moyen de transport invalide.";
@@ -119,7 +127,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
                      pays = :pays, plateformes = :plateformes, modules = :modules, applications = :applications,
                      voiture = :voiture,
                      transport = :transport, groupe_sanguin = :groupe_sanguin, sport = :sport, activites = :activites,
-                     nationalite_code = :nat, photo = :photo
+                     nationalite_code = :nat, filiere_code = :filiere, photo = :photo
                  WHERE id = :id'
             );
             $stmt->execute([
@@ -139,6 +147,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':sport' => $sport,
                 ':activites' => implode(', ', $activites),
                 ':nat' => $natCode,
+                ':filiere' => $filiereCode,
                 ':photo' => $photo,
                 ':id' => $idValide,
             ]);
@@ -161,6 +170,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'sport' => $sport,
                 'activites' => implode(', ', $activites),
                 'nationalite_code' => $natCode,
+                'filiere_code' => $filiereCode,
                 'photo' => $photo,
             ];
         } catch (PDOException $e) {
@@ -185,6 +195,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $personne['sport'] = $sport;
         $personne['activites'] = implode(', ', $activites);
         $personne['nationalite_code'] = $natCode;
+        $personne['filiere_code'] = $filiereCode;
     }
 }
 
@@ -229,6 +240,17 @@ require __DIR__ . '/../includes/header.php';
                 <td><select name="pays"><?php foreach ($PAYS as $paysOption): ?>
                     <option value="<?= h($paysOption) ?>" <?= $personne['pays'] === $paysOption ? 'selected' : '' ?>><?= h($paysOption) ?></option>
                 <?php endforeach; ?></select></td>
+            </tr>
+            <tr>
+                <td>Filière d’inscription :</td>
+                <td>
+                    <select name="filiere" required>
+                        <option value="">— Choisir une filière —</option>
+                        <?php foreach ($filieres as $filiere): ?>
+                            <option value="<?= h($filiere['code']) ?>" <?= ($personne['filiere_code'] ?? '') === $filiere['code'] ? 'selected' : '' ?>><?= h($filiere['libelle']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
             </tr>
             <tr>
                 <td>Plateforme(s) :</td>

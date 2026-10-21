@@ -22,11 +22,12 @@ if (!is_string($idRecherche) && !is_int($idRecherche)) {
     }
 }
 
-// JOIN : on récupère aussi le libellé de la nationalité
+// JOIN : on récupère les libellés de la nationalité et de la filière
 if (!$erreurRecherche) {
-    $sql = 'SELECT p.*, n.libelle AS nationalite
+    $sql = 'SELECT p.*, n.libelle AS nationalite, f.libelle AS filiere
             FROM personne p
-            LEFT JOIN nationalite n ON n.code = p.nationalite_code';
+            LEFT JOIN nationalite n ON n.code = p.nationalite_code
+            LEFT JOIN filiere f ON f.code = p.filiere_code';
     if ($idRecherche !== '') {
         $sql .= ' WHERE p.id = :id';
     }
@@ -54,7 +55,7 @@ require __DIR__ . '/../includes/header.php';
     <table class="liste">
         <tr>
             <th>ID</th><th>N°</th><th>Civilité</th><th>Nom / Prénom</th><th>Adresse</th><th>CP / Localité</th>
-            <th>Pays</th><th>Plateformes</th><th>Modules</th><th>Applications</th><th>Voiture</th><th>Transport</th><th>Groupe sanguin</th><th>Sport</th><th>Activités</th><th>Nationalité</th><th>Photo</th><th>Action</th>
+            <th>Pays</th><th>Filière d’inscription</th><th>Plateformes</th><th>Modules</th><th>Applications</th><th>Voiture</th><th>Transport</th><th>Groupe sanguin</th><th>Sport</th><th>Activités</th><th>Nationalité</th><th>Photo</th><th>Action</th>
         </tr>
         <?php foreach ($personnes as $p): ?>
             <tr>
@@ -65,6 +66,7 @@ require __DIR__ . '/../includes/header.php';
                 <td><?= h($p['adresse']) ?></td>
                 <td><?= h($p['code_postal']) ?> <?= h($p['localite']) ?></td>
                 <td><?= h($p['pays']) ?></td>
+                <td><?= h($p['filiere'] ?? '') ?></td>
                 <td><?= h($p['plateformes']) ?></td>
                 <td><?= h($p['modules']) ?></td>
                 <td><?= h($p['applications']) ?></td>

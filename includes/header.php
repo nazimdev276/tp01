@@ -17,10 +17,16 @@
         <a href="<?= $base ?>personne/formulaire.php">Formulaire Personne</a> |
         <a href="<?= $base ?>nationalite/nationalite.php">Gestion Nationalités</a> |
         <a href="<?= $base ?>nationalite/liste.php">Liste Nationalités</a> |
+        <a href="<?= $base ?>filiere/filiere.php">Gestion Filières</a> |
+        <a href="<?= $base ?>filiere/liste.php">Liste Filières</a> |
+        <a href="<?= $base ?>module/module.php">Gestion Modules</a> |
+        <a href="<?= $base ?>module/liste.php">Liste Modules</a> |
         <a href="<?= $base ?>transport/transport.php">Gestion Transports</a> |
         <a href="<?= $base ?>transport/liste.php">Liste Transports</a> |
         <a href="<?= $base ?>sport/sport.php">Gestion Sports</a> |
         <a href="<?= $base ?>sport/liste.php">Liste Sports</a> |
+        <a href="<?= $base ?>enseignant/enseignant.php">Gestion Enseignants</a> |
+        <a href="<?= $base ?>enseignant/liste.php">Liste Enseignants</a> |
         <a href="<?= $base ?>personne/liste.php">Liste Personnes</a>
     </div>
     <hr>

@@ -31,10 +31,11 @@ Every page must set, **before** `require includes/header.php`:
 
 ## Structure & flow
 
-- One file per action, no router/front controller. `personne/`, `nationalite/`, `transport/`, and `sport/` use separate form, POST handler, and list pages.
+- One file per action, no router/front controller. `personne/`, `nationalite/`, `transport/`, `sport/`, `enseignant/`, and `module/` use separate form, POST handler, and list pages.
 - The form's buttons route via `formaction` to different handlers: `enregistrer.php` (save), `afficher_php.php` (echo only), `upload_image.php` (image only), `liste.php` (GET). Keep this pattern; don't merge into one endpoint.
 - `config/database.php` is the single PDO connection (exceptions on, `FETCH_ASSOC`). Pages `require_once` it; never open a second connection.
-- Nationalité, moyen de transport, and sport dropdowns are loaded from the `nationalite`, `moyen_transport`, and `sport` database tables.
+- Nationalité, moyen de transport, and sport dropdowns are loaded from the `nationalite`, `moyen_transport`, and `sport` database tables. Teacher grade and specialty options are defined in `includes/donnees.php`.
+- Modules reference their filière through `module.filiere_code → filiere.code`; coefficients use two decimal places and hourly volume is stored as a non-negative whole number.
 - `plateformes`/`applications` are comma-joined strings in a single column — not join tables.
 - FK `personne.nationalite_code → nationalite(code)` with `ON DELETE RESTRICT`: deleting a used nationality fails at the DB level.
 

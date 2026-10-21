@@ -19,6 +19,7 @@ Vanilla PHP 8 multi-page app (university TP01/PAW). No framework, no Composer, n
 - MySQL CLI is **not** on `PATH`: `/opt/lampp/bin/mysql -uroot` (no password).
 - Database `tp01_paw`; schema + seed data in `database/database.sql` (idempotent: `CREATE IF NOT EXISTS` + `INSERT IGNORE`). Re-import with `/opt/lampp/bin/mysql -uroot < database/database.sql`.
 - Only verification available: `find . -name '*.php' -exec php -l {} \;` (PHP 8.5 CLI at `/usr/bin/php`).
+- Browser diagnostics: `http://localhost/tp01/tests.php` checks page availability and runs temporary CRUD/upload flows; it is localhost-only and removes its test records/files afterward.
 
 ## Page contract (easy to break)
 

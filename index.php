@@ -14,5 +14,6 @@ require __DIR__ . '/includes/header.php';
     <li><a href="enseignant/enseignant.php">Formulaire Enseignants</a> : enregistrer un enseignant et ses informations professionnelles.</li>
     <li><a href="personne/formulaire.php">Formulaire Personne</a> : les listes « Nationalité » et « Filière d’inscription » sont lues dans MySQL.</li>
     <li><a href="personne/liste.php">Liste Personnes</a> : voir les personnes enregistrées.</li>
+    <li><a href="tests.php">Diagnostic du site</a> : vérifier automatiquement les pages et les opérations principales.</li>
 </ol>
 <?php require __DIR__ . '/includes/footer.php'; ?>

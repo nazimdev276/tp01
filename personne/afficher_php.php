@@ -20,8 +20,11 @@ $modules      = post_liste('modules', $MODULES);
 $applications = post_liste('applications', $APPLICATIONS);
 $voitures     = post_liste('voiture', $VOITURES);
 $activites    = post_liste('activites', $ACTIVITES);
+$stmt = $pdo->prepare('SELECT libelle FROM moyen_transport');
+$stmt->execute();
+$transports = $stmt->fetchAll(PDO::FETCH_COLUMN);
 $transport    = $_POST['transport'] ?? '';
-if (!is_string($transport) || !in_array($transport, $TRANSPORTS, true)) {
+if (!is_string($transport) || !in_array($transport, $transports, true)) {
     $transport = '';
 }
 $groupeSanguin = $_POST['groupe_sanguin'] ?? '';

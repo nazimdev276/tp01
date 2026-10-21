@@ -206,6 +206,24 @@ button:focus-visible, input[type=submit]:focus-visible {
 }
 .home-links a { font-weight: 700; text-decoration: none; }
 .home-links a:hover { text-decoration: underline; }
+.diagnostic-intro {
+    margin: 0 0 16px;
+    color: #40536d;
+}
+.diagnostic-notice, .diagnostic-summary {
+    padding: 12px 15px;
+    border: 1px solid #cbdcf4;
+    border-radius: 7px;
+    background: #eff5ff;
+}
+.diagnostic-run { padding: 10px 16px; font-weight: 700; }
+.diagnostic-summary { font-weight: 700; }
+.diagnostic-pass { border-color: #b8dfca; background: #effaf3; color: #17663b; }
+.diagnostic-fail { border-color: #f0c6c2; background: #fff3f1; color: #a32920; }
+.diagnostic-results { margin: 16px 0; }
+.diagnostic-results td:nth-child(2) { font-weight: 700; white-space: nowrap; }
+.diagnostic-row-pass td:nth-child(2) { color: #17663b; }
+.diagnostic-row-fail td:nth-child(2) { color: #a32920; }
 
 @media (max-width: 640px) {
     #page { padding: 14px; }

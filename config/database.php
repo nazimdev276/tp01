@@ -18,5 +18,8 @@ try {
         ]
     );
 } catch (PDOException $e) {
+    if (!empty($databaseDiagnosticMode)) {
+        throw $e;
+    }
     die('Erreur de connexion à la base de données. Vérifiez que MySQL est démarré et que database.sql est importé.');
 }

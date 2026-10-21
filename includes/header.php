@@ -17,6 +17,7 @@
     $etudiantsActif = str_contains($pagePath, '/personne/');
     $enseignantsActif = str_contains($pagePath, '/enseignant/');
     $modulesActif = str_contains($pagePath, '/module/');
+    $diagnosticActif = $pageScript === 'tests.php';
     $tablesActives = in_array($pageScript, ['nationalite.php', 'sport.php', 'filiere.php'], true);
     ?>
     <header class="site-header">
@@ -31,6 +32,7 @@
             <li><a href="<?= $base ?>personne/formulaire.php" <?= $etudiantsActif ? 'aria-current="page"' : '' ?>>Étudiants</a></li>
             <li><a href="<?= $base ?>enseignant/enseignant.php" <?= $enseignantsActif ? 'aria-current="page"' : '' ?>>Enseignants</a></li>
             <li><a href="<?= $base ?>module/module.php" <?= $modulesActif ? 'aria-current="page"' : '' ?>>Modules</a></li>
+            <li><a href="<?= $base ?>tests.php" <?= $diagnosticActif ? 'aria-current="page"' : '' ?>>Diagnostic</a></li>
             <li>
                 <details class="nav-dropdown<?= $tablesActives ? ' nav-active' : '' ?>">
                     <summary>Tables</summary>

@@ -22,7 +22,7 @@ require __DIR__ . '/../includes/header.php';
     <table class="liste">
         <tr>
             <th>Id</th><th>Code module</th><th>Désignation module</th>
-            <th>Coefficient</th><th>Volume horaire</th><th>Filière</th>
+            <th>Coefficient</th><th>Volume horaire</th><th>Filière</th><th>Action</th>
         </tr>
         <?php foreach ($modules as $module): ?>
             <tr>
@@ -32,6 +32,7 @@ require __DIR__ . '/../includes/header.php';
                 <td><?= h($module['coefficient']) ?></td>
                 <td><?= h($module['volume_horaire']) ?></td>
                 <td><?= h($module['filiere']) ?></td>
+                <td><a href="module.php?id=<?= h($module['id']) ?>">Modifier</a></td>
             </tr>
         <?php endforeach; ?>
     </table>

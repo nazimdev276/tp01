@@ -167,6 +167,7 @@ function initFiliere(form) {
 
 function initEnseignant(form) {
     form.addEventListener('submit', function (e) {
+        if (e.submitter && e.submitter.hasAttribute('formnovalidate')) return;
         var id = form.elements.namedItem('id').value.trim();
         if ((id !== '' && !/^[1-9][0-9]*$/.test(id)) ||
             !/^[0-9]{1,10}$/.test(form.numero.value.trim()) ||

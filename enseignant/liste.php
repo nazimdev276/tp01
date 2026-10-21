@@ -17,7 +17,7 @@ require __DIR__ . '/../includes/header.php';
     <table class="liste">
         <tr>
             <th>Id</th><th>Numéro</th><th>Civilité</th><th>Nom / Prénom</th><th>Adresse</th>
-            <th>Date de naissance</th><th>Lieu de naissance</th><th>Pays</th><th>Grade</th><th>Spécialité</th>
+            <th>Date de naissance</th><th>Lieu de naissance</th><th>Pays</th><th>Grade</th><th>Spécialité</th><th>Action</th>
         </tr>
         <?php foreach ($enseignants as $enseignant): ?>
             <tr>
@@ -31,6 +31,7 @@ require __DIR__ . '/../includes/header.php';
                 <td><?= h($enseignant['pays']) ?></td>
                 <td><?= h($enseignant['grade']) ?></td>
                 <td><?= h($enseignant['specialite']) ?></td>
+                <td><a href="enseignant.php?id=<?= h($enseignant['id']) ?>">Modifier</a></td>
             </tr>
         <?php endforeach; ?>
     </table>

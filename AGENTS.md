@@ -36,6 +36,7 @@ Every page must set, **before** `require includes/header.php`:
 - `config/database.php` is the single PDO connection (exceptions on, `FETCH_ASSOC`). Pages `require_once` it; never open a second connection.
 - Nationalité, moyen de transport, and sport dropdowns are loaded from the `nationalite`, `moyen_transport`, and `sport` database tables. Teacher grade and specialty options are defined in `includes/donnees.php`.
 - Modules reference their filière through `module.filiere_code → filiere.code`; coefficients use two decimal places and hourly volume is stored as a non-negative whole number.
+- Teacher, module, and filière records are searched, created, edited, and deleted from their respective form pages; their list pages link back to the form with the selected record.
 - `plateformes`/`applications` are comma-joined strings in a single column — not join tables.
 - FK `personne.nationalite_code → nationalite(code)` with `ON DELETE RESTRICT`: deleting a used nationality fails at the DB level.
 

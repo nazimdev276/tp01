@@ -1,9 +1,22 @@
 /* css/style.css : style volontairement très simple */
 body { background: #fff; font-family: Arial, sans-serif; font-size: 14px; margin: 10px; }
-#page { max-width: 800px; margin: auto; }
+#page { max-width: 960px; margin: auto; }
 h1 { font-size: 20px; }
 h2 { font-size: 17px; }
 a { color: #0000cc; }
+#menu { margin-bottom: 12px; }
+.menu-bar {
+    list-style: none; display: flex; gap: 16px; align-items: center; padding: 0; margin: 0;
+    background: #f4f4f4; border: 1px solid #ddd; padding: 8px 12px; border-radius: 4px;
+}
+.menu-bar > li { position: relative; }
+.dropdown-label { cursor: pointer; color: #0000cc; }
+.submenu {
+    display: none; position: absolute; top: 100%; left: 0; list-style: none; background: #fff;
+    border: 1px solid #ccc; padding: 8px 10px; min-width: 140px; z-index: 10;
+}
+.dropdown:hover .submenu, .dropdown:focus-within .submenu { display: block; }
+.submenu li { margin: 6px 0; }
 table.formulaire td { padding: 4px 8px; vertical-align: top; }
 table.liste { border-collapse: collapse; }
 table.liste th, table.liste td { border: 1px solid #000; padding: 4px 10px; }

@@ -15,11 +15,12 @@ require __DIR__ . '/../includes/header.php';
     <p>Aucune filière enregistrée.</p>
 <?php else: ?>
     <table class="liste">
-        <tr><th>Code</th><th>Filière</th></tr>
+        <tr><th>Code</th><th>Filière</th><th>Action</th></tr>
         <?php foreach ($filieres as $f): ?>
             <tr>
                 <td><?= h($f['code']) ?></td>
                 <td><?= h($f['libelle']) ?></td>
+                <td><a href="filiere.php?code=<?= rawurlencode($f['code']) ?>">Modifier</a></td>
             </tr>
         <?php endforeach; ?>
     </table>

@@ -17,7 +17,7 @@ if (!is_string($idVoyageur) || filter_var($idVoyageur, FILTER_VALIDATE_INT, [
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || $libelle === '' || mb_strlen($libelle) > 20) {
     $erreur = "Demande de suppression invalide.";
 } else {
-    $stmt = $pdo->prepare('SELECT COUNT(*) FROM personne WHERE transport = :libelle');
+    $stmt = $pdo->prepare("SELECT COUNT(*) FROM personne WHERE FIND_IN_SET(:libelle, REPLACE(transport, ', ', ',')) > 0");
     $stmt->execute([':libelle' => $libelle]);
     if ((int)$stmt->fetchColumn() > 0) {
         $erreur = "Ce moyen de transport est utilisé par un étudiant et ne peut pas être supprimé.";

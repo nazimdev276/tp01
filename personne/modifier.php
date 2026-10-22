@@ -58,8 +58,10 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $codePostal = $champPost('code_postal');
     $localite = $champPost('localite');
     $pays = $champPost('pays');
+    $descriptionPost = $_POST['description'] ?? '';
+    $description = is_string($descriptionPost) ? trim($descriptionPost) : '';
     $voitures = post_liste('voiture', $VOITURES);
-    $transport = $champPost('transport');
+    $transportPost = $_POST['transport'] ?? [];
     $groupeSanguin = $champPost('groupe_sanguin');
     $sport = $champPost('sport');
     $natCode = $champPost('nationalite');
@@ -93,10 +95,27 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!in_array($pays, $PAYS, true)) {
         $erreurs[] = "Pays invalide.";
     }
+    if (!is_string($descriptionPost) || mb_strlen($description) > 500) {
+        $erreurs[] = "La description ne doit pas dépasser 500 caractères.";
+    }
     if (!in_array($filiereCode, array_column($filieres, 'code'), true)) {
         $erreurs[] = "Filière d’inscription invalide.";
     }
-    if (!in_array($transport, $transports, true)) {
+    $transportsSelectionnes = [];
+    if (is_array($transportPost)) {
+        foreach ($transportPost as $transportOption) {
+            if (is_string($transportOption) && in_array($transportOption, $transports, true)) {
+                $transportsSelectionnes[] = $transportOption;
+            } else {
+                $transportsSelectionnes[] = null;
+            }
+        }
+    } else {
+        $transportsSelectionnes = [null];
+    }
+    $transportsSelectionnes = array_values(array_unique($transportsSelectionnes));
+    $transport = implode(', ', array_filter($transportsSelectionnes, 'is_string'));
+    if (in_array(null, $transportsSelectionnes, true) || mb_strlen($transport) > 255) {
         $erreurs[] = "Moyen de transport invalide.";
     }
     if ($groupeSanguin !== '' && !in_array($groupeSanguin, $GROUPES_SANGUINS, true)) {
@@ -130,7 +149,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
                      adresse = :adresse, code_postal = :cp, localite = :localite,
                      pays = :pays, plateformes = :plateformes, modules = :modules, applications = :applications,
                      voiture = :voiture,
-                     transport = :transport, groupe_sanguin = :groupe_sanguin, sport = :sport, activites = :activites,
+                     transport = :transport, description = :description, groupe_sanguin = :groupe_sanguin, sport = :sport, activites = :activites,
                      nationalite_code = :nat, filiere_code = :filiere, photo = :photo
                  WHERE id = :id'
             );
@@ -148,6 +167,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':applications' => implode(', ', $applications),
                 ':voiture' => implode(', ', $voitures),
                 ':transport' => $transport,
+                ':description' => $description,
                 ':groupe_sanguin' => $groupeSanguin,
                 ':sport' => $sport,
                 ':activites' => implode(', ', $activites),
@@ -172,6 +192,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 'applications' => implode(', ', $applications),
                 'voiture' => implode(', ', $voitures),
                 'transport' => $transport,
+                'description' => $description,
                 'groupe_sanguin' => $groupeSanguin,
                 'sport' => $sport,
                 'activites' => implode(', ', $activites),
@@ -198,6 +219,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $personne['applications'] = implode(', ', $applications);
         $personne['voiture'] = implode(', ', $voitures);
         $personne['transport'] = $transport;
+        $personne['description'] = $description;
         $personne['groupe_sanguin'] = $groupeSanguin;
         $personne['sport'] = $sport;
         $personne['activites'] = implode(', ', $activites);
@@ -210,6 +232,7 @@ $plateformesSelectionnees = array_filter(array_map('trim', explode(',', $personn
 $modulesSelectionnes = array_filter(array_map('trim', explode(',', $personne['modules'] ?? '')));
 $applicationsSelectionnees = array_filter(array_map('trim', explode(',', $personne['applications'] ?? '')));
 $voituresSelectionnees = array_filter(array_map('trim', explode(',', $personne['voiture'] ?? '')));
+$transportsSelectionnes = array_filter(array_map('trim', explode(',', $personne['transport'] ?? '')));
 $activitesSelectionnees = array_filter(array_map('trim', explode(',', $personne['activites'] ?? '')));
 
 $base = '../';
@@ -293,10 +316,11 @@ require __DIR__ . '/../includes/header.php';
             </tr>
             <tr>
                 <td>Moyen de transport :</td>
-                <td><select name="transport"><?php foreach ($transports as $transportOption): ?>
-                    <option value="<?= h($transportOption) ?>" <?= $personne['transport'] === $transportOption ? 'selected' : '' ?>><?= h($transportOption) ?></option>
-                <?php endforeach; ?></select></td>
+                <td><?php foreach ($transports as $transportOption): ?>
+                    <label><input type="checkbox" name="transport[]" value="<?= h($transportOption) ?>" <?= in_array($transportOption, $transportsSelectionnes, true) ? 'checked' : '' ?>> <?= h($transportOption) ?></label><br>
+                <?php endforeach; ?></td>
             </tr>
+            <tr><td>Description :</td><td><textarea name="description" maxlength="500" rows="4" cols="40"><?= h($personne['description'] ?? '') ?></textarea></td></tr>
             <tr>
                 <td>Groupe sanguin :</td>
                 <td><select name="groupe_sanguin">

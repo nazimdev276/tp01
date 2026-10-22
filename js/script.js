@@ -60,7 +60,6 @@ function validerPersonne(form) {
     if (form.adresse.value.trim() === '') erreurs.push("L'adresse est obligatoire.");
     if (!/^[0-9]{4,10}$/.test(form.code_postal.value.trim())) erreurs.push('Code postal invalide.');
     if (form.localite.value.trim() === '') erreurs.push('La localité est obligatoire.');
-    if (!form.transport.value) erreurs.push('Aucun moyen de transport disponible.');
     if (!form.filiere || !form.filiere.value) erreurs.push('Veuillez choisir une filière d’inscription.');
     if (!form.nationalite) erreurs.push("Aucune nationalité disponible : ajoutez-en une d'abord.");
     return erreurs;
@@ -96,7 +95,8 @@ function afficherValeurs(form) {
         ['Voiture(s)', Array.prototype.map.call(form.querySelectorAll('select[name="voiture[]"] option:checked'), function (option) {
             return option.value;
         }).join(', ')],
-        ['Moyen de transport', form.transport.value],
+        ['Moyen(x) de transport', valeursCochees(form, 'transport[]')],
+        ['Description', form.description.value],
         ['Groupe sanguin', form.groupe_sanguin.value],
         ['Sport', form.sport.value],
         ['Activité(s)', valeursCochees(form, 'activites[]')],

@@ -14,7 +14,8 @@
     <?php
     $pageScript = basename($_SERVER['SCRIPT_NAME'] ?? '');
     $pagePath = $_SERVER['SCRIPT_NAME'] ?? '';
-    $etudiantsActif = str_contains($pagePath, '/personne/');
+    $voyageursActif = $pageScript === 'voyageurs.php' || str_starts_with($pageScript, 'voyageur_');
+    $etudiantsActif = str_contains($pagePath, '/personne/') && !$voyageursActif;
     $enseignantsActif = str_contains($pagePath, '/enseignant/');
     $modulesActif = str_contains($pagePath, '/module/');
     $transportsActif = str_contains($pagePath, '/transport/');
@@ -31,6 +32,7 @@
         <ul class="navbar-links">
             <li><a href="<?= $base ?>index.php" <?= $pageScript === 'index.php' ? 'aria-current="page"' : '' ?>>Accueil</a></li>
             <li><a href="<?= $base ?>personne/formulaire.php" <?= $etudiantsActif ? 'aria-current="page"' : '' ?>>Étudiants</a></li>
+            <li><a href="<?= $base ?>personne/voyageurs.php" <?= $voyageursActif ? 'aria-current="page"' : '' ?>>Voyageurs</a></li>
             <li><a href="<?= $base ?>enseignant/enseignant.php" <?= $enseignantsActif ? 'aria-current="page"' : '' ?>>Enseignants</a></li>
             <li><a href="<?= $base ?>module/module.php" <?= $modulesActif ? 'aria-current="page"' : '' ?>>Modules</a></li>
             <li><a href="<?= $base ?>transport/liste.php" <?= $transportsActif ? 'aria-current="page"' : '' ?>>Transports</a></li>

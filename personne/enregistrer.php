@@ -20,7 +20,9 @@ $localite   = trim($_POST['localite'] ?? '');
 $pays       = $_POST['pays'] ?? '';
 $natCode    = $_POST['nationalite'] ?? '';
 $filiereCode = $_POST['filiere'] ?? '';
-$transport  = $_POST['transport'] ?? '';
+$transportPost = $_POST['transport'] ?? [];
+$descriptionPost = $_POST['description'] ?? '';
+$description = is_string($descriptionPost) ? trim($descriptionPost) : '';
 $groupeSanguin = $_POST['groupe_sanguin'] ?? '';
 $sport      = $_POST['sport'] ?? '';
 $groupeSanguin = is_string($groupeSanguin) ? trim($groupeSanguin) : '';
@@ -38,6 +40,20 @@ $succes = false;
 $stmt = $pdo->prepare('SELECT libelle FROM moyen_transport');
 $stmt->execute();
 $transports = $stmt->fetchAll(PDO::FETCH_COLUMN);
+$transportsSelectionnes = [];
+if (is_array($transportPost)) {
+    foreach ($transportPost as $transportOption) {
+        if (is_string($transportOption) && in_array($transportOption, $transports, true)) {
+            $transportsSelectionnes[] = $transportOption;
+        } else {
+            $transportsSelectionnes[] = null;
+        }
+    }
+} else {
+    $transportsSelectionnes = [null];
+}
+$transportsSelectionnes = array_values(array_unique($transportsSelectionnes));
+$transport = implode(', ', array_filter($transportsSelectionnes, 'is_string'));
 
 $stmt = $pdo->prepare('SELECT code FROM filiere');
 $stmt->execute();
@@ -70,7 +86,10 @@ if (!preg_match('/^[0-9]{4,10}$/', $codePostal))         $erreurs[] = "Code post
 if ($localite === '' || mb_strlen($localite) > 60)       $erreurs[] = "Localité obligatoire (60 caractères max).";
 if (!in_array($pays, $PAYS, true))                       $erreurs[] = "Pays invalide.";
 if (!is_string($filiereCode) || !in_array($filiereCode, $filieres, true)) $erreurs[] = "Filière d’inscription invalide.";
-if (!is_string($transport) || !in_array($transport, $transports, true)) $erreurs[] = "Moyen de transport invalide.";
+if (in_array(null, $transportsSelectionnes, true)) $erreurs[] = "Moyen de transport invalide.";
+if (mb_strlen($transport) > 255) $erreurs[] = "La liste des moyens de transport est trop longue.";
+if (!is_string($descriptionPost)) $erreurs[] = "Description invalide.";
+if (mb_strlen($description) > 500) $erreurs[] = "La description ne doit pas dépasser 500 caractères.";
 if ($groupeSanguin !== '' && !in_array($groupeSanguin, $GROUPES_SANGUINS, true)) $erreurs[] = "Groupe sanguin invalide.";
 if ($sport !== '' && !in_array($sport, $sports, true)) $erreurs[] = "Sport invalide.";
 
@@ -109,6 +128,7 @@ if (!$erreurs) {
             ':applications' => implode(', ', $applications),  // ex: "Internet, Bureautique"
             ':voiture'      => implode(', ', $voitures),
             ':transport'    => $transport,
+            ':description'  => $description,
             ':groupe_sanguin' => $groupeSanguin,
             ':sport'        => $sport,
             ':activites'    => implode(', ', $activites),
@@ -123,7 +143,7 @@ if (!$erreurs) {
                         adresse = :adresse, code_postal = :cp, localite = :localite, pays = :pays,
                         plateformes = :plateformes, modules = :modules, applications = :applications,
                         voiture = :voiture,
-                        transport = :transport, groupe_sanguin = :groupe_sanguin, sport = :sport, activites = :activites,
+                        transport = :transport, description = :description, groupe_sanguin = :groupe_sanguin, sport = :sport, activites = :activites,
                         nationalite_code = :nat, filiere_code = :filiere, photo = :photo
                     WHERE id = :id';
             $valeurs[':id'] = $idPersonne;
@@ -134,10 +154,10 @@ if (!$erreurs) {
             $parametreId = $idPersonne === null ? '' : ':id, ';
             $sql = 'INSERT INTO personne
                     (' . $colonnes . 'numero, type_foyer, civilite, nom_prenom, adresse, code_postal, localite, pays,
-                     plateformes, modules, applications, voiture, transport, groupe_sanguin, sport, activites, nationalite_code, filiere_code, photo)
+                     plateformes, modules, applications, voiture, transport, description, groupe_sanguin, sport, activites, nationalite_code, filiere_code, photo)
                     VALUES
                     (' . $parametreId . ':numero, :type_foyer, :civilite, :nom, :adresse, :cp, :localite, :pays,
-                     :plateformes, :modules, :applications, :voiture, :transport, :groupe_sanguin, :sport, :activites, :nat, :filiere, :photo)';
+                     :plateformes, :modules, :applications, :voiture, :transport, :description, :groupe_sanguin, :sport, :activites, :nat, :filiere, :photo)';
             if ($idPersonne !== null) {
                 $valeurs[':id'] = $idPersonne;
             }

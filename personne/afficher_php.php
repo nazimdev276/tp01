@@ -27,10 +27,17 @@ if (!is_string($typeFoyer) || !in_array($typeFoyer, $TYPES_FOYER, true)) {
 $stmt = $pdo->prepare('SELECT libelle FROM moyen_transport');
 $stmt->execute();
 $transports = $stmt->fetchAll(PDO::FETCH_COLUMN);
-$transport    = $_POST['transport'] ?? '';
-if (!is_string($transport) || !in_array($transport, $transports, true)) {
-    $transport = '';
+$transportsPostes = $_POST['transport'] ?? [];
+$transportsSelectionnes = [];
+if (is_array($transportsPostes)) {
+    foreach ($transportsPostes as $transportOption) {
+        if (is_string($transportOption) && in_array($transportOption, $transports, true)) {
+            $transportsSelectionnes[] = $transportOption;
+        }
+    }
 }
+$description = $_POST['description'] ?? '';
+$description = is_string($description) ? trim($description) : '';
 $groupeSanguin = $_POST['groupe_sanguin'] ?? '';
 if (!is_string($groupeSanguin) || !in_array($groupeSanguin, $GROUPES_SANGUINS, true)) {
     $groupeSanguin = '';
@@ -78,7 +85,8 @@ if (is_string($filiereCode)) {
     <tr><td>Module(s)</td><td><?= h(implode(', ', $modules)) ?></td></tr>
     <tr><td>Application(s)</td><td><?= h(implode(', ', $applications)) ?></td></tr>
     <tr><td>Voiture(s)</td><td><?= h(implode(', ', $voitures)) ?></td></tr>
-    <tr><td>Moyen de transport</td><td><?= h($transport) ?></td></tr>
+    <tr><td>Moyen(x) de transport</td><td><?= h(implode(', ', $transportsSelectionnes)) ?></td></tr>
+    <tr><td>Description</td><td><?= h($description) ?></td></tr>
     <tr><td>Groupe sanguin</td><td><?= h($groupeSanguin) ?></td></tr>
     <tr><td>Sport</td><td><?= h($sport) ?></td></tr>
     <tr><td>Activité(s)</td><td><?= h(implode(', ', $activites)) ?></td></tr>

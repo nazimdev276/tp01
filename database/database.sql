@@ -119,6 +119,7 @@ CREATE TABLE IF NOT EXISTS personne (
   groupe_sanguin   VARCHAR(3)   NOT NULL DEFAULT '',
   sport            VARCHAR(40)  NOT NULL DEFAULT '',
   activites        VARCHAR(100) NOT NULL DEFAULT '',
+  description      VARCHAR(500) NOT NULL DEFAULT '',
   nationalite_code VARCHAR(3)   NOT NULL,
   filiere_code     VARCHAR(10)  DEFAULT NULL,
   photo            VARCHAR(100) DEFAULT NULL,
@@ -140,7 +141,8 @@ ALTER TABLE personne
   ADD COLUMN IF NOT EXISTS sport VARCHAR(40) NOT NULL DEFAULT '',
   ADD COLUMN IF NOT EXISTS activites VARCHAR(100) NOT NULL DEFAULT '',
   ADD COLUMN IF NOT EXISTS filiere_code VARCHAR(10) DEFAULT NULL,
-  ADD COLUMN IF NOT EXISTS type_foyer VARCHAR(15) NOT NULL DEFAULT 'Individuelle';
+  ADD COLUMN IF NOT EXISTS type_foyer VARCHAR(15) NOT NULL DEFAULT 'Individuelle',
+  ADD COLUMN IF NOT EXISTS description VARCHAR(500) NOT NULL DEFAULT '';
 
 -- Ajoute la clé étrangère aux bases existantes sans la recréer à chaque import.
 SET @filiere_fk_absente = (
@@ -160,4 +162,5 @@ EXECUTE filiere_fk_stmt;
 DEALLOCATE PREPARE filiere_fk_stmt;
 
 ALTER TABLE personne
-  MODIFY COLUMN voiture VARCHAR(100) NOT NULL DEFAULT '';
+  MODIFY COLUMN voiture VARCHAR(100) NOT NULL DEFAULT '',
+  MODIFY COLUMN transport VARCHAR(255) NOT NULL DEFAULT '';

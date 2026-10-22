@@ -50,6 +50,7 @@ $modulesSelectionnes = array_filter(array_map('trim', explode(',', $personne['mo
 $applicationsSelectionnees = array_filter(array_map('trim', explode(',', $personne['applications'] ?? '')));
 $voituresSelectionnees = array_filter(array_map('trim', explode(',', $personne['voiture'] ?? '')));
 $activitesSelectionnees = array_filter(array_map('trim', explode(',', $personne['activites'] ?? '')));
+$transportsSelectionnes = array_filter(array_map('trim', explode(',', $personne['transport'] ?? '')));
 
 $base  = '../';
 $titre = 'Formulaire Personne';
@@ -61,7 +62,7 @@ require __DIR__ . '/../includes/header.php';
            value="<?= h($idRecherche) ?>" required>
     <button type="submit">Rechercher</button>
 </form>
-<p><a href="voiture.php">Rechercher par ID et afficher les informations personnelles</a></p>
+<p><a href="voyageurs.php">Gestion des voyageurs</a></p>
 <?php if ($erreurRecherche): ?>
     <p class="erreur"><?= h($erreurRecherche) ?></p>
 <?php elseif ($idRechercheValide !== null && $personne): ?>
@@ -182,15 +183,17 @@ require __DIR__ . '/../includes/header.php';
         <tr>
             <td>Moyen de transport :</td>
             <td>
-                <select name="transport" id="transport">
-                    <?php foreach ($transports as $transport): ?>
-                        <option value="<?= h($transport) ?>" <?= ($personne['transport'] ?? '') === $transport ? 'selected' : '' ?>><?= h($transport) ?></option>
-                    <?php endforeach; ?>
-                </select>
+                <?php foreach ($transports as $transport): ?>
+                    <label><input type="checkbox" name="transport[]" value="<?= h($transport) ?>" <?= in_array($transport, $transportsSelectionnes, true) ? 'checked' : '' ?>> <?= h($transport) ?></label><br>
+                <?php endforeach; ?>
                 <?php if (!$transports): ?>
                     <span class="erreur">Aucun moyen de transport. <a href="../transport/transport.php">En ajouter un</a></span>
                 <?php endif; ?>
             </td>
+        </tr>
+        <tr>
+            <td>Description :</td>
+            <td><textarea name="description" id="description" maxlength="500" rows="4" cols="40"><?= h($personne['description'] ?? '') ?></textarea></td>
         </tr>
         <tr>
             <td>Groupe sanguin :</td>

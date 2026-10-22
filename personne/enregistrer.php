@@ -11,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // 1) Récupération des champs
 $numero     = trim($_POST['numero'] ?? '');
+$typeFoyer = $_POST['type_foyer'] ?? 'Individuelle';
 $civilite   = $_POST['civilite'] ?? '';
 $nomPrenom  = trim($_POST['nom_prenom'] ?? '');
 $adresse    = trim($_POST['adresse'] ?? '');
@@ -61,6 +62,7 @@ if ($idFormulaire !== '') {
     }
 }
 if (!preg_match('/^[0-9]{1,10}$/', $numero))            $erreurs[] = "Numéro invalide (chiffres uniquement).";
+if (!is_string($typeFoyer) || !in_array($typeFoyer, $TYPES_FOYER, true)) $erreurs[] = "Type de foyer invalide.";
 if (!in_array($civilite, $CIVILITES, true))              $erreurs[] = "Civilité invalide.";
 if ($nomPrenom === '' || mb_strlen($nomPrenom) > 80)     $erreurs[] = "Nom / Prénom obligatoire (80 caractères max).";
 if ($adresse === '' || mb_strlen($adresse) > 150)        $erreurs[] = "Adresse obligatoire (150 caractères max).";
@@ -95,6 +97,7 @@ if (!$erreurs) {
     try {
         $valeurs = [
             ':numero'       => $numero,
+            ':type_foyer'   => $typeFoyer,
             ':civilite'     => $civilite,
             ':nom'          => $nomPrenom,
             ':adresse'      => $adresse,
@@ -116,7 +119,7 @@ if (!$erreurs) {
 
         if ($idPersonne !== null && $personneExistante) {
             $sql = 'UPDATE personne
-                    SET numero = :numero, civilite = :civilite, nom_prenom = :nom,
+                    SET numero = :numero, type_foyer = :type_foyer, civilite = :civilite, nom_prenom = :nom,
                         adresse = :adresse, code_postal = :cp, localite = :localite, pays = :pays,
                         plateformes = :plateformes, modules = :modules, applications = :applications,
                         voiture = :voiture,
@@ -130,10 +133,10 @@ if (!$erreurs) {
             $colonnes = $idPersonne === null ? '' : 'id, ';
             $parametreId = $idPersonne === null ? '' : ':id, ';
             $sql = 'INSERT INTO personne
-                    (' . $colonnes . 'numero, civilite, nom_prenom, adresse, code_postal, localite, pays,
+                    (' . $colonnes . 'numero, type_foyer, civilite, nom_prenom, adresse, code_postal, localite, pays,
                      plateformes, modules, applications, voiture, transport, groupe_sanguin, sport, activites, nationalite_code, filiere_code, photo)
                     VALUES
-                    (' . $parametreId . ':numero, :civilite, :nom, :adresse, :cp, :localite, :pays,
+                    (' . $parametreId . ':numero, :type_foyer, :civilite, :nom, :adresse, :cp, :localite, :pays,
                      :plateformes, :modules, :applications, :voiture, :transport, :groupe_sanguin, :sport, :activites, :nat, :filiere, :photo)';
             if ($idPersonne !== null) {
                 $valeurs[':id'] = $idPersonne;

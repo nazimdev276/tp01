@@ -11,6 +11,10 @@ require __DIR__ . '/../includes/header.php';
             <td>Moyen de transport</td>
             <td><input type="text" name="libelle" id="transport-libelle" maxlength="20" size="30" required></td>
         </tr>
+        <tr>
+            <td>Description</td>
+            <td><textarea name="description" id="transport-description" maxlength="500" rows="4" cols="40"></textarea></td>
+        </tr>
     </table>
     <button type="submit">Enregistrer</button>
     <button type="submit" formaction="liste.php" formmethod="get" formnovalidate>Affichage Liste</button>

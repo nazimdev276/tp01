@@ -61,6 +61,7 @@ require __DIR__ . '/../includes/header.php';
            value="<?= h($idRecherche) ?>" required>
     <button type="submit">Rechercher</button>
 </form>
+<p><a href="voiture.php">Rechercher par ID et afficher les informations personnelles</a></p>
 <?php if ($erreurRecherche): ?>
     <p class="erreur"><?= h($erreurRecherche) ?></p>
 <?php elseif ($idRechercheValide !== null && $personne): ?>
@@ -87,6 +88,14 @@ require __DIR__ . '/../includes/header.php';
         <tr>
             <td>Numéro :</td>
             <td><input type="text" name="numero" id="numero" size="6" maxlength="10" placeholder="15" value="<?= h($personne['numero'] ?? '') ?>"></td>
+        </tr>
+        <tr>
+            <td>Type de foyer :</td>
+            <td>
+                <?php foreach ($TYPES_FOYER as $typeFoyer): ?>
+                    <label><input type="radio" name="type_foyer" value="<?= h($typeFoyer) ?>" <?= ($personne['type_foyer'] ?? 'Individuelle') === $typeFoyer ? 'checked' : '' ?> required> <?= h($typeFoyer) ?></label>
+                <?php endforeach; ?>
+            </td>
         </tr>
         <tr>
             <td>Civilité :</td>

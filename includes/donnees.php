@@ -2,6 +2,7 @@
 // includes/donnees.php : listes fixes utilisées par le formulaire
 // (la NATIONALITE, elle, vient de la base de données)
 $CIVILITES    = ['Monsieur', 'Madame', 'Mademoiselle'];
+$TYPES_FOYER  = ['Famille', 'Individuelle'];
 $PAYS         = ['Algérie', 'France', 'Belgique', 'Tunisie', 'Maroc', 'Allemagne', 'Italie', 'Espagne', 'Canada', 'États-Unis'];
 $PLATEFORMES  = ['Windows', 'Macintosh', 'Unix'];
 $MODULES     = ['BDD', 'algo', 'archy'];

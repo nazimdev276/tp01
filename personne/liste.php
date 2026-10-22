@@ -55,13 +55,14 @@ require __DIR__ . '/../includes/header.php';
     <div class="table-scroll">
         <table class="liste">
             <tr>
-                <th>ID</th><th>N°</th><th>Civilité</th><th>Nom / Prénom</th><th>Adresse</th><th>CP / Localité</th>
+                <th>ID</th><th>N°</th><th>Type de foyer</th><th>Civilité</th><th>Nom / Prénom</th><th>Adresse</th><th>CP / Localité</th>
                 <th>Pays</th><th>Filière d’inscription</th><th>Plateformes</th><th>Modules</th><th>Applications</th><th>Voiture</th><th>Transport</th><th>Groupe sanguin</th><th>Sport</th><th>Activités</th><th>Nationalité</th><th>Photo</th><th>Action</th>
             </tr>
             <?php foreach ($personnes as $p): ?>
                 <tr>
                     <td><?= h($p['id']) ?></td>
                     <td><?= h($p['numero']) ?></td>
+                    <td><?= h($p['type_foyer']) ?></td>
                     <td><?= h($p['civilite']) ?></td>
                     <td><?= h($p['nom_prenom']) ?></td>
                     <td><?= h($p['adresse']) ?></td>

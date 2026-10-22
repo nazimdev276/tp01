@@ -60,8 +60,12 @@ CREATE TABLE IF NOT EXISTS module (
 
 -- Table des moyens de transport
 CREATE TABLE IF NOT EXISTS moyen_transport (
-  libelle VARCHAR(20) NOT NULL PRIMARY KEY
+  libelle      VARCHAR(20)  NOT NULL PRIMARY KEY,
+  description  VARCHAR(500) NOT NULL DEFAULT ''
 ) ENGINE=InnoDB;
+
+ALTER TABLE moyen_transport
+  ADD COLUMN IF NOT EXISTS description VARCHAR(500) NOT NULL DEFAULT '';
 
 INSERT IGNORE INTO moyen_transport (libelle) VALUES
   ('Bus'),
@@ -100,6 +104,7 @@ CREATE TABLE IF NOT EXISTS enseignant (
 CREATE TABLE IF NOT EXISTS personne (
   id               INT AUTO_INCREMENT PRIMARY KEY,
   numero           VARCHAR(10)  NOT NULL,
+  type_foyer       VARCHAR(15)  NOT NULL DEFAULT 'Individuelle',
   civilite         VARCHAR(15)  NOT NULL,
   nom_prenom       VARCHAR(80)  NOT NULL,
   adresse          VARCHAR(150) NOT NULL,
@@ -134,7 +139,8 @@ ALTER TABLE personne
   ADD COLUMN IF NOT EXISTS groupe_sanguin VARCHAR(3) NOT NULL DEFAULT '',
   ADD COLUMN IF NOT EXISTS sport VARCHAR(40) NOT NULL DEFAULT '',
   ADD COLUMN IF NOT EXISTS activites VARCHAR(100) NOT NULL DEFAULT '',
-  ADD COLUMN IF NOT EXISTS filiere_code VARCHAR(10) DEFAULT NULL;
+  ADD COLUMN IF NOT EXISTS filiere_code VARCHAR(10) DEFAULT NULL,
+  ADD COLUMN IF NOT EXISTS type_foyer VARCHAR(15) NOT NULL DEFAULT 'Individuelle';
 
 -- Ajoute la clé étrangère aux bases existantes sans la recréer à chaque import.
 SET @filiere_fk_absente = (

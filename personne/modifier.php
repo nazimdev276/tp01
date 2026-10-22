@@ -51,6 +51,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
     };
 
     $numero = $champPost('numero');
+    $typeFoyer = $champPost('type_foyer');
     $civilite = $champPost('civilite');
     $nomPrenom = $champPost('nom_prenom');
     $adresse = $champPost('adresse');
@@ -70,6 +71,9 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!preg_match('/^[0-9]{1,10}$/', $numero)) {
         $erreurs[] = "Numéro invalide (chiffres uniquement).";
+    }
+    if (!in_array($typeFoyer, $TYPES_FOYER, true)) {
+        $erreurs[] = "Type de foyer invalide.";
     }
     if (!in_array($civilite, $CIVILITES, true)) {
         $erreurs[] = "Civilité invalide.";
@@ -122,7 +126,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $stmt = $pdo->prepare(
                 'UPDATE personne
-                 SET numero = :numero, civilite = :civilite, nom_prenom = :nom,
+                 SET numero = :numero, type_foyer = :type_foyer, civilite = :civilite, nom_prenom = :nom,
                      adresse = :adresse, code_postal = :cp, localite = :localite,
                      pays = :pays, plateformes = :plateformes, modules = :modules, applications = :applications,
                      voiture = :voiture,
@@ -132,6 +136,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $stmt->execute([
                 ':numero' => $numero,
+                ':type_foyer' => $typeFoyer,
                 ':civilite' => $civilite,
                 ':nom' => $nomPrenom,
                 ':adresse' => $adresse,
@@ -155,6 +160,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $personne = [
                 'id' => $idValide,
                 'numero' => $numero,
+                'type_foyer' => $typeFoyer,
                 'civilite' => $civilite,
                 'nom_prenom' => $nomPrenom,
                 'adresse' => $adresse,
@@ -180,6 +186,7 @@ if ($personne && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$succes) {
         $personne['numero'] = $numero;
+        $personne['type_foyer'] = $typeFoyer;
         $personne['civilite'] = $civilite;
         $personne['nom_prenom'] = $nomPrenom;
         $personne['adresse'] = $adresse;
@@ -220,6 +227,12 @@ require __DIR__ . '/../includes/header.php';
         <table class="formulaire">
             <tr><td>ID :</td><td><?= h($personne['id']) ?></td></tr>
             <tr><td>Numéro :</td><td><input type="text" name="numero" maxlength="10" value="<?= h($personne['numero']) ?>" required></td></tr>
+            <tr>
+                <td>Type de foyer :</td>
+                <td><?php foreach ($TYPES_FOYER as $typeFoyerOption): ?>
+                    <label><input type="radio" name="type_foyer" value="<?= h($typeFoyerOption) ?>" <?= ($personne['type_foyer'] ?? 'Individuelle') === $typeFoyerOption ? 'checked' : '' ?> required> <?= h($typeFoyerOption) ?></label>
+                <?php endforeach; ?></td>
+            </tr>
             <tr>
                 <td>Civilité :</td>
                 <td><?php foreach ($CIVILITES as $civiliteOption): ?>

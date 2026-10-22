@@ -10,16 +10,28 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $libelle = $_POST['libelle'] ?? '';
 $libelle = is_string($libelle) ? trim($libelle) : '';
+$description = $_POST['description'] ?? '';
+$description = is_string($description) ? trim($description) : '';
+$retourVoyageur = ($_POST['retour'] ?? '') === 'voyageur';
+$idVoyageur = $_POST['id'] ?? '';
+if (!is_string($idVoyageur) || filter_var($idVoyageur, FILTER_VALIDATE_INT, [
+    'options' => ['min_range' => 1, 'max_range' => 2147483647],
+]) === false) {
+    $idVoyageur = '';
+}
 $erreurs = [];
 
 if ($libelle === '' || mb_strlen($libelle) > 20) {
     $erreurs[] = "Le moyen de transport est obligatoire (20 caractères maximum).";
 }
+if (mb_strlen($description) > 500) {
+    $erreurs[] = "La description ne doit pas dépasser 500 caractères.";
+}
 
 if (!$erreurs) {
     try {
-        $stmt = $pdo->prepare('INSERT INTO moyen_transport (libelle) VALUES (:libelle)');
-        $stmt->execute([':libelle' => $libelle]);
+        $stmt = $pdo->prepare('INSERT INTO moyen_transport (libelle, description) VALUES (:libelle, :description)');
+        $stmt->execute([':libelle' => $libelle, ':description' => $description]);
     } catch (PDOException $e) {
         if ($e->getCode() === '23000') {
             $erreurs[] = "Ce moyen de transport existe déjà.";
@@ -36,9 +48,9 @@ if ($erreurs) {
     foreach ($erreurs as $erreur) {
         echo '<p class="erreur">' . h($erreur) . '</p>';
     }
-    echo '<p><a href="transport.php">Retour</a></p>';
+    echo '<p><a href="' . ($retourVoyageur ? '../personne/voiture.php?id=' . rawurlencode($idVoyageur) : 'transport.php') . '">Retour</a></p>';
 } else {
     echo '<p class="ok">Moyen de transport enregistré : ' . h($libelle) . '</p>';
-    echo '<p><a href="transport.php">Ajouter un autre</a> | <a href="liste.php">Affichage Liste</a></p>';
+    echo '<p><a href="' . ($retourVoyageur ? '../personne/voiture.php?id=' . rawurlencode($idVoyageur) : 'transport.php') . '">Retour</a> | <a href="liste.php">Affichage Liste</a></p>';
 }
 require __DIR__ . '/../includes/footer.php';

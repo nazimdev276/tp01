@@ -3,9 +3,9 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/fonctions.php';
 
-$stmt = $pdo->prepare('SELECT libelle FROM moyen_transport ORDER BY libelle');
+$stmt = $pdo->prepare('SELECT libelle, description FROM moyen_transport ORDER BY libelle');
 $stmt->execute();
-$transports = $stmt->fetchAll(PDO::FETCH_COLUMN);
+$transports = $stmt->fetchAll();
 
 $base = '../';
 $titre = 'Liste des moyens de transport';
@@ -15,9 +15,18 @@ require __DIR__ . '/../includes/header.php';
     <p>Aucun moyen de transport enregistré.</p>
 <?php else: ?>
     <table class="liste">
-        <tr><th>Moyen de transport</th></tr>
+        <tr><th>Moyen de transport</th><th>Description</th><th>Action</th></tr>
         <?php foreach ($transports as $transport): ?>
-            <tr><td><?= h($transport) ?></td></tr>
+            <tr>
+                <td><?= h($transport['libelle']) ?></td>
+                <td><?= h($transport['description']) ?></td>
+                <td>
+                    <form method="post" action="supprimer.php" onsubmit="return confirm('Supprimer ce moyen de transport ?');">
+                        <input type="hidden" name="libelle" value="<?= h($transport['libelle']) ?>">
+                        <button type="submit">Supprimer</button>
+                    </form>
+                </td>
+            </tr>
         <?php endforeach; ?>
     </table>
 <?php endif; ?>

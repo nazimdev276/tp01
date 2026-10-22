@@ -20,6 +20,10 @@ $modules      = post_liste('modules', $MODULES);
 $applications = post_liste('applications', $APPLICATIONS);
 $voitures     = post_liste('voiture', $VOITURES);
 $activites    = post_liste('activites', $ACTIVITES);
+$typeFoyer = $_POST['type_foyer'] ?? 'Individuelle';
+if (!is_string($typeFoyer) || !in_array($typeFoyer, $TYPES_FOYER, true)) {
+    $typeFoyer = '';
+}
 $stmt = $pdo->prepare('SELECT libelle FROM moyen_transport');
 $stmt->execute();
 $transports = $stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -63,6 +67,7 @@ if (is_string($filiereCode)) {
 ?>
 <table class="liste">
     <tr><td>Numéro</td><td><?= h($_POST['numero'] ?? '') ?></td></tr>
+    <tr><td>Type de foyer</td><td><?= h($typeFoyer) ?></td></tr>
     <tr><td>Civilité</td><td><?= h($_POST['civilite'] ?? '') ?></td></tr>
     <tr><td>Nom / Prénom</td><td><?= h($_POST['nom_prenom'] ?? '') ?></td></tr>
     <tr><td>Adresse</td><td><?= h($_POST['adresse'] ?? '') ?></td></tr>

@@ -217,10 +217,12 @@ if ($runRequested) {
                         'code' => $nationaliteCode, 'libelle' => $nationaliteLibelle,
                     ], 'Nationalité enregistrée');
                     diagnostic_post($applicationUrl . 'sport/enregistrer.php', ['libelle' => $sportName], 'Sport enregistré');
-                    diagnostic_post($applicationUrl . 'transport/enregistrer.php', ['libelle' => $transportName], 'Moyen de transport enregistré');
+                    $transportDescription = 'Description de test';
+                    diagnostic_post($applicationUrl . 'transport/enregistrer.php', ['libelle' => $transportName, 'description' => $transportDescription], 'Moyen de transport enregistré');
                     diagnostic_assert((int)diagnostic_database_value($pdo, 'SELECT COUNT(*) FROM nationalite WHERE code = :code', [':code' => $nationaliteCode]) === 1, 'Nationalité absente de la base.');
                     diagnostic_assert((int)diagnostic_database_value($pdo, 'SELECT COUNT(*) FROM sport WHERE libelle = :libelle', [':libelle' => $sportName]) === 1, 'Sport absent de la base.');
                     diagnostic_assert((int)diagnostic_database_value($pdo, 'SELECT COUNT(*) FROM moyen_transport WHERE libelle = :libelle', [':libelle' => $transportName]) === 1, 'Transport absent de la base.');
+                    diagnostic_assert(diagnostic_database_value($pdo, 'SELECT description FROM moyen_transport WHERE libelle = :libelle', [':libelle' => $transportName]) === $transportDescription, 'Description du transport absente de la base.');
                     foreach ([
                         ['nationalite/liste.php', $nationaliteLibelle],
                         ['sport/liste.php', $sportName],
@@ -276,7 +278,7 @@ if ($runRequested) {
                 $personId = null;
                 diagnostic_run('Cycle CRUD étudiant', static function () use ($pdo, $applicationUrl, $studentNumber, $studentName, $studentUpdatedName, $nationaliteCode, $filiereCode, $transportName, $sportName, $PAYS, $CIVILITES, &$personId): string {
                     $studentData = [
-                        'numero' => $studentNumber, 'civilite' => $CIVILITES[0],
+                        'numero' => $studentNumber, 'type_foyer' => 'Famille', 'civilite' => $CIVILITES[0],
                         'nom_prenom' => $studentName, 'adresse' => 'Adresse de test',
                         'code_postal' => '12345', 'localite' => 'Ville de test',
                         'pays' => $PAYS[0], 'nationalite' => $nationaliteCode,
@@ -285,16 +287,23 @@ if ($runRequested) {
                     diagnostic_post($applicationUrl . 'personne/enregistrer.php', $studentData, 'Personne enregistrée : ' . $studentName);
                     $personId = diagnostic_database_value($pdo, 'SELECT id FROM personne WHERE numero = :numero AND nom_prenom = :nom', [':numero' => $studentNumber, ':nom' => $studentName]);
                     diagnostic_assert($personId !== false, 'Étudiant introuvable après création.');
+                    diagnostic_assert(diagnostic_database_value($pdo, 'SELECT type_foyer FROM personne WHERE id = :id', [':id' => $personId]) === 'Famille', 'Le type de foyer n’a pas été enregistré.');
                     $searchPage = diagnostic_request($applicationUrl . 'personne/formulaire.php?id=' . rawurlencode((string)$personId));
-                    diagnostic_assert(str_contains($searchPage['body'], $studentName), 'La recherche ne retourne pas la fiche de l’étudiant.');
+                    diagnostic_assert(str_contains($searchPage['body'], $studentName) && str_contains($searchPage['body'], 'value="Famille" checked'), 'La recherche ne retourne pas les informations de l’étudiant.');
+                    $voyageurPage = diagnostic_request($applicationUrl . 'personne/voiture.php?id=' . rawurlencode((string)$personId));
+                    diagnostic_assert(str_contains($voyageurPage['body'], $transportName) && str_contains($voyageurPage['body'], 'Description de test'), 'La fiche voyageur ne présente pas le moyen de transport et sa description.');
                     $listPage = diagnostic_request($applicationUrl . 'personne/liste.php?id=' . rawurlencode((string)$personId));
-                    diagnostic_assert(str_contains($listPage['body'], $studentName), 'La liste ne retourne pas l’étudiant.');
+                    diagnostic_assert(str_contains($listPage['body'], $studentName) && str_contains($listPage['body'], 'Famille'), 'La liste ne retourne pas l’étudiant.');
                     $studentData['id'] = (string)$personId;
                     $studentData['nom_prenom'] = $studentUpdatedName;
+                    $studentData['type_foyer'] = 'Individuelle';
                     diagnostic_post($applicationUrl . 'personne/enregistrer.php', $studentData, 'ont été modifiées.');
                     diagnostic_assert(diagnostic_database_value($pdo, 'SELECT nom_prenom FROM personne WHERE id = :id', [':id' => $personId]) === $studentUpdatedName, 'La modification de l’étudiant n’a pas été enregistrée.');
+                    diagnostic_assert(diagnostic_database_value($pdo, 'SELECT type_foyer FROM personne WHERE id = :id', [':id' => $personId]) === 'Individuelle', 'La modification du type de foyer n’a pas été enregistrée.');
                     diagnostic_post($applicationUrl . 'personne/supprimer.php', ['id' => (string)$personId], 'a été supprimée.');
                     diagnostic_assert((int)diagnostic_database_value($pdo, 'SELECT COUNT(*) FROM personne WHERE id = :id', [':id' => $personId]) === 0, 'L’étudiant existe encore après suppression.');
+                    diagnostic_post($applicationUrl . 'transport/supprimer.php', ['libelle' => $transportName], 'a été supprimé.');
+                    diagnostic_assert((int)diagnostic_database_value($pdo, 'SELECT COUNT(*) FROM moyen_transport WHERE libelle = :libelle', [':libelle' => $transportName]) === 0, 'Le moyen de transport existe encore après suppression.');
                     return 'Création, recherche, liste, modification et suppression confirmées.';
                 }, $results);
 

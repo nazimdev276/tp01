@@ -75,15 +75,66 @@ function diagnostic_database_value(PDO $pdo, string $sql, array $params = []): m
     return $statement->fetchColumn();
 }
 
+function diagnostic_response_message(string $body): string
+{
+    if (preg_match('/<p class="erreur">(.+?)<\/p>/s', $body, $match) === 1) {
+        $message = trim(html_entity_decode(strip_tags($match[1]), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    } else {
+        $message = trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($body), ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?? '');
+    }
+    return $message !== '' ? mb_substr($message, 0, 280) : "Le formulaire n'a pas confirmé l'opération attendue.";
+}
+
 function diagnostic_post(string $url, array $data, string $successText): string
 {
     $response = diagnostic_request($url, 'POST', $data);
     diagnostic_assert($response['status'] >= 200 && $response['status'] < 400, "Réponse HTTP {$response['status']}.");
     if (!str_contains($response['body'], $successText)) {
-        $message = trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($response['body']), ENT_QUOTES | ENT_HTML5, 'UTF-8')) ?? '');
-        throw new RuntimeException($message !== '' ? "Réponse du formulaire : " . mb_substr($message, 0, 280) : "Le formulaire n'a pas confirmé l'opération attendue.");
+        throw new RuntimeException('Réponse du formulaire : ' . diagnostic_response_message($response['body']));
     }
     return $response['body'];
+}
+
+function diagnostic_png_fixture(): string
+{
+    $png = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADUlEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC', true);
+    if ($png === false) {
+        throw new RuntimeException('Impossible de préparer le fichier image de test.');
+    }
+    return $png;
+}
+
+function diagnostic_multipart_request(
+    string $url,
+    array $data,
+    string $fileField,
+    string $fileName,
+    string $mime,
+    string $contents
+): array {
+    $boundary = '----tp01diagnostic' . bin2hex(random_bytes(8));
+    $parts = [];
+    foreach ($data as $name => $value) {
+        $fieldName = is_array($value) ? $name . '[]' : $name;
+        foreach (is_array($value) ? $value : [$value] as $item) {
+            if (!is_string($item) && !is_int($item)) {
+                throw new RuntimeException('Donnée de formulaire multipart invalide.');
+            }
+            $parts[] = "--$boundary\r\n"
+                . "Content-Disposition: form-data; name=\"$fieldName\"\r\n\r\n"
+                . (string)$item . "\r\n";
+        }
+    }
+    $parts[] = "--$boundary\r\n"
+        . "Content-Disposition: form-data; name=\"$fileField\"; filename=\"$fileName\"\r\n"
+        . "Content-Type: $mime\r\n\r\n"
+        . $contents . "\r\n--$boundary--\r\n";
+    return diagnostic_request(
+        $url,
+        'POST',
+        implode('', $parts),
+        'multipart/form-data; boundary=' . $boundary
+    );
 }
 
 function diagnostic_run(string $label, callable $test, array &$results): bool
@@ -119,7 +170,7 @@ if ($runRequested) {
             ['Enregistrement étudiant', 'personne/enregistrer.php', null],
             ['Suppression étudiant', 'personne/supprimer.php', 'La suppression doit être demandée'],
             ['Modification étudiant', 'personne/modifier.php', 'Identifiant invalide.'],
-            ['Recherche voyageur', 'personne/voyageurs.php', 'ID de l’étudiant'],
+            ['Recherche voyageur', 'personne/voyageurs.php', 'ID du voyageur'],
             ['Formulaire enseignants', 'enseignant/enseignant.php', 'id="form-enseignant"'],
             ['Liste enseignants', 'enseignant/liste.php', 'Liste des enseignants'],
             ['Enregistrement enseignant', 'enseignant/enregistrer.php', null],
@@ -191,9 +242,13 @@ if ($runRequested) {
             $teacherUpdatedName = 'MOD-' . $token;
             $studentName = 'TEST-' . $token;
             $studentUpdatedName = 'MOD-' . $token;
+            $voyageurName = 'TEST-' . $token;
+            $voyageurUpdatedName = 'MOD-' . $token;
             $studentNumber = (string)random_int(100000000, 999999999);
             $teacherNumber = (string)random_int(100000000, 999999999);
+            $voyageurNumber = (string)random_int(100000000, 999999999);
             $imageFilename = null;
+            $voyageurImageFilename = null;
 
             try {
                 diagnostic_run('Création et modification de filière', static function () use ($pdo, $applicationUrl, $filiereCode, $filiereLibelle): string {
@@ -276,6 +331,80 @@ if ($runRequested) {
                     return 'Création, recherche, modification et suppression confirmées.';
                 }, $results);
 
+                diagnostic_run('Cycle CRUD voyageur et photo', static function () use ($pdo, $applicationUrl, $voyageurNumber, $voyageurName, $voyageurUpdatedName, $filiereCode, $transportName, $PAYS, $CIVILITES, &$voyageurImageFilename): string {
+                    $voyageurData = [
+                        'action' => 'creer_voyageur',
+                        'numero' => $voyageurNumber,
+                        'type_foyer' => 'Famille',
+                        'civilite' => $CIVILITES[0],
+                        'nom_prenom' => $voyageurName,
+                        'adresse' => 'Adresse de test voyageur',
+                        'code_postal' => '12345',
+                        'pays' => $PAYS[0],
+                        'filiere_code' => $filiereCode,
+                        'transport' => [$transportName],
+                        'description' => 'Description de test voyageur',
+                    ];
+                    $creation = diagnostic_multipart_request(
+                        $applicationUrl . 'personne/voyageurs.php',
+                        $voyageurData,
+                        'photo',
+                        'voyageur.png',
+                        'image/png',
+                        diagnostic_png_fixture()
+                    );
+                    if ($creation['status'] !== 200 || !str_contains($creation['body'], 'Le voyageur a été enregistré.')) {
+                        throw new RuntimeException('Réponse du formulaire : ' . diagnostic_response_message($creation['body']));
+                    }
+                    $voyageurId = diagnostic_database_value(
+                        $pdo,
+                        'SELECT id FROM voyageur WHERE numero = :numero AND nom_prenom = :nom',
+                        [':numero' => $voyageurNumber, ':nom' => $voyageurName]
+                    );
+                    diagnostic_assert($voyageurId !== false, 'Voyageur introuvable après création.');
+                    $voyageurId = (string)$voyageurId;
+                    $voyageurImageFilename = diagnostic_database_value(
+                        $pdo,
+                        'SELECT photo FROM voyageur WHERE id = :id',
+                        [':id' => $voyageurId]
+                    );
+                    diagnostic_assert(
+                        is_string($voyageurImageFilename)
+                        && preg_match('/^[a-f0-9]{16}\.(?:png|jpg|gif)$/i', $voyageurImageFilename) === 1
+                        && is_file(__DIR__ . '/uploads/' . $voyageurImageFilename),
+                        'La photo du voyageur n’a pas été enregistrée correctement.'
+                    );
+
+                    $searchPage = diagnostic_request($applicationUrl . 'personne/voyageurs.php?id=' . rawurlencode($voyageurId));
+                    diagnostic_assert(
+                        str_contains($searchPage['body'], $voyageurName)
+                        && str_contains($searchPage['body'], 'Informations du voyageur ID')
+                        && str_contains($searchPage['body'], 'name="photo"')
+                        && str_contains($searchPage['body'], $voyageurImageFilename)
+                        && !str_contains($searchPage['body'], '<h2>Ajouter un voyageur</h2>'),
+                        'La recherche n’affiche pas uniquement la fiche modifiable du voyageur.'
+                    );
+
+                    $voyageurData['action'] = 'modifier_voyageur';
+                    $voyageurData['nom_prenom'] = $voyageurUpdatedName;
+                    $voyageurData['adresse'] = 'Adresse modifiée du voyageur';
+                    $updateData = $voyageurData;
+                    $updateData['id'] = $voyageurId;
+                    diagnostic_post($applicationUrl . 'personne/voyageurs.php', $updateData, 'ont été modifiées.');
+                    diagnostic_assert(
+                        diagnostic_database_value($pdo, 'SELECT nom_prenom FROM voyageur WHERE id = :id', [':id' => $voyageurId]) === $voyageurUpdatedName
+                        && diagnostic_database_value($pdo, 'SELECT adresse FROM voyageur WHERE id = :id', [':id' => $voyageurId]) === 'Adresse modifiée du voyageur'
+                        && diagnostic_database_value($pdo, 'SELECT photo FROM voyageur WHERE id = :id', [':id' => $voyageurId]) === $voyageurImageFilename,
+                        'La modification du voyageur n’a pas été enregistrée ou a remplacé sa photo.'
+                    );
+                    diagnostic_post($applicationUrl . 'personne/voyageur_supprimer.php', ['id' => $voyageurId], 'a été supprimé.');
+                    diagnostic_assert(
+                        (int)diagnostic_database_value($pdo, 'SELECT COUNT(*) FROM voyageur WHERE id = :id', [':id' => $voyageurId]) === 0,
+                        'Le voyageur existe encore après suppression.'
+                    );
+                    return 'Création avec photo, recherche, modification et suppression confirmées.';
+                }, $results);
+
                 $personId = null;
                 diagnostic_run('Cycle CRUD étudiant', static function () use ($pdo, $applicationUrl, $studentNumber, $studentName, $studentUpdatedName, $nationaliteCode, $filiereCode, $transportName, $sportName, $PAYS, $CIVILITES, &$personId): string {
                     $studentData = [
@@ -293,35 +422,6 @@ if ($runRequested) {
                     diagnostic_assert(str_contains($searchPage['body'], $studentName) && str_contains($searchPage['body'], 'value="Famille" checked'), 'La recherche ne retourne pas les informations de l’étudiant.');
                     $listPage = diagnostic_request($applicationUrl . 'personne/liste.php?id=' . rawurlencode((string)$personId));
                     diagnostic_assert(str_contains($listPage['body'], $studentName) && str_contains($listPage['body'], 'Famille'), 'La liste ne retourne pas l’étudiant.');
-                    $voyageurPage = diagnostic_request($applicationUrl . 'personne/voyageurs.php?id=' . rawurlencode((string)$personId));
-                    diagnostic_assert(
-                        str_contains($voyageurPage['body'], $studentName)
-                        && str_contains($voyageurPage['body'], 'Famille')
-                        && str_contains($voyageurPage['body'], '12345')
-                        && str_contains($voyageurPage['body'], 'name="transport[]"')
-                        && str_contains($voyageurPage['body'], 'Description de test')
-                        && !str_contains($voyageurPage['body'], 'voyageur_enregistrer.php'),
-                        'La recherche voyageur n’affiche pas les informations modifiables ou le choix de transport.'
-                    );
-                    diagnostic_post($applicationUrl . 'personne/voyageurs.php', [
-                        'id' => (string)$personId,
-                        'pays' => $PAYS[0],
-                        'nom_prenom' => $studentName,
-                        'adresse' => 'Adresse modifiée depuis voyageurs',
-                        'type_foyer' => 'Famille',
-                        'filiere_code' => $filiereCode,
-                        'code_postal' => '12345',
-                        'numero' => $studentNumber,
-                        'civilite' => $CIVILITES[0],
-                        'transport' => [$transportName, 'Bus'],
-                        'description' => 'Description modifiée depuis voyageurs',
-                    ], 'ont été modifiées.');
-                    diagnostic_assert(
-                        diagnostic_database_value($pdo, 'SELECT adresse FROM personne WHERE id = :id', [':id' => $personId]) === 'Adresse modifiée depuis voyageurs'
-                        && diagnostic_database_value($pdo, 'SELECT transport FROM personne WHERE id = :id', [':id' => $personId]) === $transportName . ', Bus'
-                        && diagnostic_database_value($pdo, 'SELECT description FROM personne WHERE id = :id', [':id' => $personId]) === 'Description modifiée depuis voyageurs',
-                        'La modification voyageur n’a pas été enregistrée sur la fiche étudiant.'
-                    );
                     $studentData['id'] = (string)$personId;
                     $studentData['nom_prenom'] = $studentUpdatedName;
                     $studentData['type_foyer'] = 'Individuelle';
@@ -378,10 +478,23 @@ if ($runRequested) {
                     return 'Suppression confirmée.';
                 }, $results);
             } finally {
+                try {
+                    $storedVoyageurPhoto = diagnostic_database_value(
+                        $pdo,
+                        'SELECT photo FROM voyageur WHERE numero = :value AND nom_prenom IN (:created, :modified)',
+                        [':value' => $voyageurNumber, ':created' => $voyageurName, ':modified' => $voyageurUpdatedName]
+                    );
+                    if (is_string($storedVoyageurPhoto) && $storedVoyageurPhoto !== '') {
+                        $voyageurImageFilename = $storedVoyageurPhoto;
+                    }
+                } catch (Throwable $e) {
+                    $results[] = ['label' => 'Nettoyage du fichier image voyageur', 'ok' => false, 'detail' => $e->getMessage()];
+                }
                 $cleanups = [
                     ['DELETE FROM personne WHERE numero = :value AND nom_prenom IN (:created, :modified)', 'SELECT COUNT(*) FROM personne WHERE numero = :value AND nom_prenom IN (:created, :modified)', [':value' => $studentNumber, ':created' => $studentName, ':modified' => $studentUpdatedName]],
                     ['DELETE FROM module WHERE code = :value AND designation IN (:created, :modified)', 'SELECT COUNT(*) FROM module WHERE code = :value AND designation IN (:created, :modified)', [':value' => $moduleCode, ':created' => $moduleCreatedDesignation, ':modified' => $moduleUpdatedDesignation]],
                     ['DELETE FROM enseignant WHERE numero = :value AND nom_prenom IN (:created, :modified)', 'SELECT COUNT(*) FROM enseignant WHERE numero = :value AND nom_prenom IN (:created, :modified)', [':value' => $teacherNumber, ':created' => $teacherName, ':modified' => $teacherUpdatedName]],
+                    ['DELETE FROM voyageur WHERE numero = :value AND nom_prenom IN (:created, :modified)', 'SELECT COUNT(*) FROM voyageur WHERE numero = :value AND nom_prenom IN (:created, :modified)', [':value' => $voyageurNumber, ':created' => $voyageurName, ':modified' => $voyageurUpdatedName]],
                     ['DELETE FROM filiere WHERE code = :value AND libelle IN (:created, :modified)', 'SELECT COUNT(*) FROM filiere WHERE code = :value AND libelle IN (:created, :modified)', [':value' => $filiereCode, ':created' => $filiereCode, ':modified' => $filiereLibelle]],
                     ['DELETE FROM nationalite WHERE code = :value AND libelle = :marker', 'SELECT COUNT(*) FROM nationalite WHERE code = :value AND libelle = :marker', [':value' => $nationaliteCode, ':marker' => $nationaliteLibelle]],
                     ['DELETE FROM sport WHERE libelle = :value', 'SELECT COUNT(*) FROM sport WHERE libelle = :value', [':value' => $sportName]],
@@ -411,10 +524,21 @@ if ($runRequested) {
                         $results[] = ['label' => 'Nettoyage du fichier image', 'ok' => false, 'detail' => $e->getMessage()];
                     }
                 }
+                if ($voyageurImageFilename !== null) {
+                    try {
+                        $imagePath = __DIR__ . '/uploads/' . $voyageurImageFilename;
+                        if (is_file($imagePath) && !unlink($imagePath)) {
+                            throw new RuntimeException('Impossible de supprimer la photo de test du voyageur.');
+                        }
+                    } catch (Throwable $e) {
+                        $cleanupSucceeded = false;
+                        $results[] = ['label' => 'Nettoyage du fichier image voyageur', 'ok' => false, 'detail' => $e->getMessage()];
+                    }
+                }
                 if ($cleanupSucceeded) {
-                    $detail = $imageFilename === null
+                    $detail = $imageFilename === null && $voyageurImageFilename === null
                         ? 'Enregistrements temporaires supprimés et vérifiés.'
-                        : 'Enregistrements et fichier image supprimés et vérifiés.';
+                        : 'Enregistrements et fichiers image supprimés et vérifiés.';
                     $results[] = ['label' => 'Nettoyage des données temporaires', 'ok' => true, 'detail' => $detail];
                 }
             }

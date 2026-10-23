@@ -7,6 +7,7 @@
   - [Page contract (easy to break)](#page-contract-easy-to-break)
   - [Structure & flow](#structure-flow)
   - [Conventions](#conventions)
+  - [Testing page restriction](#testing-page-restriction)
 
 <!--toc:end-->
 
@@ -48,3 +49,7 @@ Every page must set, **before** `require includes/header.php`:
 - Always output through `h()` (XSS) and use prepared statements (existing code does).
 - File uploads go only through `enregistrer_image()` (2 MB cap, `finfo` MIME check, random hex name). `uploads/` must stay writable, and its `.htaccess` blocks PHP execution — never remove it.
 - Comments, validation messages, and UI strings are French; keep new text French.
+
+## Testing page restriction
+
+- Do not modify `tests.php` unless the user explicitly authorizes changes to that file.

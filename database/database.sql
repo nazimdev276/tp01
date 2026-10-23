@@ -132,6 +132,25 @@ CREATE TABLE IF NOT EXISTS personne (
     ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
+-- Table dédiée aux voyageurs
+CREATE TABLE IF NOT EXISTS voyageur (
+  id               INT AUTO_INCREMENT PRIMARY KEY,
+  numero           VARCHAR(10)  NOT NULL,
+  type_foyer       VARCHAR(15)  NOT NULL DEFAULT 'Individuelle',
+  civilite         VARCHAR(15)  NOT NULL,
+  nom_prenom       VARCHAR(80)  NOT NULL,
+  adresse          VARCHAR(150) NOT NULL,
+  code_postal      VARCHAR(10)  NOT NULL,
+  pays             VARCHAR(40)  NOT NULL,
+  filiere_code     VARCHAR(10)  DEFAULT NULL,
+  transport        VARCHAR(255) NOT NULL DEFAULT '',
+  description      VARCHAR(500) NOT NULL DEFAULT '',
+  photo            VARCHAR(100) DEFAULT NULL,
+  CONSTRAINT fk_voyageur_filiere
+    FOREIGN KEY (filiere_code) REFERENCES filiere(code)
+    ON UPDATE CASCADE ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
 -- Mise à niveau des bases déjà créées
 ALTER TABLE personne
   ADD COLUMN IF NOT EXISTS modules VARCHAR(100) NOT NULL DEFAULT '',

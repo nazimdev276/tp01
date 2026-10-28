@@ -2,21 +2,35 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/fonctions.php';
 
-$numero = '';
+$idEtudiant = '';
 $etudiant = null;
 $modules = [];
 $moduleSelectionne = '';
 $codeModule = '';
 $coefficient = '';
 $note = '';
+$noteExiste = false;
 $message = '';
 $messageType = 'erreur';
 $action = 'rechercher';
 
+$stmt = $pdo->prepare('SELECT code, designation FROM module ORDER BY designation');
+$stmt->execute();
+$modules = $stmt->fetchAll();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = isset($_POST['enregistrer']) ? 'enregistrer' : (isset($_POST['modifier']) ? 'modifier' : (isset($_POST['supprimer']) ? 'supprimer' : ($_POST['action'] ?? '')));
-    $numeroPost = $_POST['numero'] ?? '';
-    $numero = is_string($numeroPost) ? trim($numeroPost) : '';
+    $idPost = $_POST['id'] ?? '';
+    $idEtudiant = is_string($idPost) ? trim($idPost) : '';
+    $idValide = filter_var($idEtudiant, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    if ($idValide === false && $idEtudiant === '' && isset($_POST['numero']) && is_string($_POST['numero'])) {
+        $stmt = $pdo->prepare('SELECT id FROM personne WHERE numero = :numero LIMIT 1');
+        $stmt->execute([':numero' => trim($_POST['numero'])]);
+        $idValide = $stmt->fetchColumn();
+        if ($idValide !== false) {
+            $idEtudiant = (string)$idValide;
+        }
+    }
     $modulePost = $_POST['module'] ?? '';
     $moduleSelectionne = is_string($modulePost) ? trim($modulePost) : '';
     $notePost = $_POST['note'] ?? '';
@@ -26,40 +40,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (in_array($action, ['rechercher', 'enregistrer', 'modifier', 'supprimer'], true)) {
-        $stmt = $pdo->prepare(
-            'SELECT p.civilite, p.nom_prenom, p.photo, f.libelle AS filiere, p.filiere_code
-             FROM personne p
-             LEFT JOIN filiere f ON f.code = p.filiere_code
-             WHERE p.numero = :numero
-             LIMIT 1'
-        );
-        $stmt->execute([':numero' => $numero]);
-        $etudiant = $stmt->fetch() ?: null;
+        if ($idValide === false) {
+            $message = 'Etudiant Inéxistant';
+        } else {
+            $stmt = $pdo->prepare(
+                'SELECT p.civilite, p.nom_prenom, p.photo, f.libelle AS filiere, p.filiere_code
+                 FROM personne p
+                 LEFT JOIN filiere f ON f.code = p.filiere_code
+                 WHERE p.id = :id'
+            );
+            $stmt->execute([':id' => $idValide]);
+            $etudiant = $stmt->fetch() ?: null;
+        }
 
         if ($etudiant) {
-            $stmt = $pdo->prepare(
-                'SELECT code, designation
-                 FROM module
-                 WHERE filiere_code = :filiere_code
-                 ORDER BY designation'
-            );
-            $stmt->execute([':filiere_code' => $etudiant['filiere_code']]);
-            $modules = $stmt->fetchAll();
-
             if (in_array($action, ['enregistrer', 'modifier', 'supprimer'], true) && $moduleSelectionne === '') {
                 $message = 'Veuillez choisir un module.';
             }
 
             if ($moduleSelectionne !== '') {
                 $stmt = $pdo->prepare(
-                    'SELECT code, designation, coefficient
-                     FROM module
-                     WHERE code = :code AND filiere_code = :filiere_code'
+                    'SELECT m.code, m.designation, m.coefficient, f.libelle AS filiere
+                     FROM module m
+                     JOIN filiere f ON f.code = m.filiere_code
+                     WHERE m.code = :code'
                 );
-                $stmt->execute([
-                    ':code' => $moduleSelectionne,
-                    ':filiere_code' => $etudiant['filiere_code'],
-                ]);
+                $stmt->execute([':code' => $moduleSelectionne]);
                 $moduleCourant = $stmt->fetch();
 
                 if ($moduleCourant) {
@@ -70,31 +76,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmt = $pdo->prepare(
                             'SELECT code_module, coefficient, `Note`
                              FROM Notes
-                             WHERE Num_Etudiant = :numero AND Nom_module = :nom_module'
+                             WHERE Num_Etudiant = :id_etudiant AND Nom_module = :nom_module'
                         );
                         $stmt->execute([
-                            ':numero' => $numero,
+                            ':id_etudiant' => $idValide,
                             ':nom_module' => $moduleCourant['designation'],
                         ]);
                         $noteExistante = $stmt->fetch();
 
                         if (!$noteExistante) {
-                            $message = 'Note Inéxistante pour ce module';
+                            $message = "Aucune note n'existe pour ce module : rien à supprimer.";
                         } else {
+                            $noteExiste = true;
                             $codeModule = $noteExistante['code_module'];
                             $coefficient = $noteExistante['coefficient'];
                             $note = $noteExistante['Note'];
                             try {
                                 $stmt = $pdo->prepare(
                                     'DELETE FROM Notes
-                                     WHERE Num_Etudiant = :numero AND Nom_module = :nom_module'
+                                     WHERE Num_Etudiant = :id_etudiant AND Nom_module = :nom_module'
                                 );
                                 $stmt->execute([
-                                    ':numero' => $numero,
+                                    ':id_etudiant' => $idValide,
                                     ':nom_module' => $moduleCourant['designation'],
                                 ]);
                                 $message = 'Note supprimée avec succès.';
                                 $messageType = 'ok';
+                                $noteExiste = false;
+                                $note = '';
                             } catch (PDOException $e) {
                                 $message = 'Erreur lors de la suppression de la note.';
                             }
@@ -104,17 +113,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if ($action === 'modifier') {
                             $stmt = $pdo->prepare(
                                 'SELECT 1 FROM Notes
-                                 WHERE Num_Etudiant = :numero AND Nom_module = :nom_module'
+                                 WHERE Num_Etudiant = :id_etudiant AND Nom_module = :nom_module'
                             );
                             $stmt->execute([
-                                ':numero' => $numero,
+                                ':id_etudiant' => $idValide,
                                 ':nom_module' => $moduleCourant['designation'],
                             ]);
                             $noteExistante = $stmt->fetchColumn();
+                            $noteExiste = (bool)$noteExistante;
                         }
 
                         if ($action === 'modifier' && !$noteExistante) {
                             $message = "Aucune note n'existe pour cet étudiant et ce module : rien à modifier.";
+                            $messageType = 'petit';
                         } elseif (!preg_match('/^-?(?:0|[1-9][0-9]{0,2})(?:\.[0-9]{1,2})?$/', $note)) {
                             $message = 'Veuillez saisir une note valide (maximum 2 décimales).';
                         } elseif ($action === 'modifier') {
@@ -123,20 +134,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     'UPDATE Notes
                                      SET Filiere = :filiere, code_module = :code_module,
                                          coefficient = :coefficient, `Note` = :note
-                                     WHERE Num_Etudiant = :numero AND Nom_module = :nom_module'
+                                     WHERE Num_Etudiant = :id_etudiant AND Nom_module = :nom_module'
                                 );
                                 $stmt->execute([
-                                    ':filiere' => $etudiant['filiere'],
+                                    ':filiere' => $moduleCourant['filiere'],
                                     ':code_module' => $moduleCourant['code'],
                                     ':coefficient' => $moduleCourant['coefficient'],
                                     ':note' => $note,
-                                    ':numero' => $numero,
+                                    ':id_etudiant' => $idValide,
                                     ':nom_module' => $moduleCourant['designation'],
                                 ]);
                                 $codeModule = $moduleCourant['code'];
                                 $coefficient = $moduleCourant['coefficient'];
                                 $message = 'Note et informations du module modifiées avec succès.';
                                 $messageType = 'ok';
+                                $noteExiste = true;
                             } catch (PDOException $e) {
                                 $message = 'Erreur lors de la modification de la note.';
                             }
@@ -145,11 +157,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $stmt = $pdo->prepare(
                                     'INSERT INTO Notes
                                      (Num_Etudiant, Filiere, Nom_module, code_module, coefficient, `Note`)
-                                     VALUES (:numero, :filiere, :nom_module, :code_module, :coefficient, :note)'
+                                     VALUES (:id_etudiant, :filiere, :nom_module, :code_module, :coefficient, :note)'
                                 );
                                 $stmt->execute([
-                                    ':numero' => $numero,
-                                    ':filiere' => $etudiant['filiere'],
+                                    ':id_etudiant' => $idValide,
+                                    ':filiere' => $moduleCourant['filiere'],
                                     ':nom_module' => $moduleCourant['designation'],
                                     ':code_module' => $moduleCourant['code'],
                                     ':coefficient' => $moduleCourant['coefficient'],
@@ -157,9 +169,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 ]);
                                 $message = 'Note enregistrée avec succès.';
                                 $messageType = 'ok';
+                                $noteExiste = true;
                             } catch (PDOException $e) {
                                 if ($e->getCode() === '23000' && (int)($e->errorInfo[1] ?? 0) === 1062) {
                                     $message = 'Une note existe déjà pour cet étudiant et ce module.';
+                                    $noteExiste = true;
                                 } else {
                                     $message = "Erreur lors de l'enregistrement de la note.";
                                 }
@@ -169,18 +183,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $stmt = $pdo->prepare(
                             'SELECT code_module, coefficient, `Note`
                              FROM Notes
-                             WHERE Num_Etudiant = :numero AND Nom_module = :nom_module'
+                             WHERE Num_Etudiant = :id_etudiant AND Nom_module = :nom_module'
                         );
                         $stmt->execute([
-                            ':numero' => $numero,
+                            ':id_etudiant' => $idValide,
                             ':nom_module' => $moduleCourant['designation'],
                         ]);
                         $noteExistante = $stmt->fetch();
 
                         if ($noteExistante) {
+                            $noteExiste = true;
                             $codeModule = $noteExistante['code_module'];
                             $coefficient = $noteExistante['coefficient'];
                             $note = $noteExistante['Note'];
+                        } else {
+                            $message = "Aucune note n'existe pour ce module. Saisissez-la puis enregistrez.";
+                            $messageType = 'petit';
                         }
                     }
                 } else {
@@ -204,14 +222,17 @@ $titre = 'Saisie Bulletin de Notes';
 require __DIR__ . '/../includes/header.php';
 ?>
 <?php if ($message !== ''): ?><p class="<?= h($messageType) ?>"><?= h($message) ?></p><?php endif; ?>
+<form method="get" action="liste.php">
+    <button type="submit">Voir toutes les notes</button>
+</form>
 <form class="bulletin-form" method="post" action="bulletin.php">
     <input type="hidden" name="action" value="rechercher">
     <div class="bulletin-layout">
         <table class="formulaire">
             <tr>
-                <td><label for="numero">Numéro :</label></td>
+                <td><label for="id">ID étudiant :</label></td>
                 <td>
-                    <input type="text" name="numero" id="numero" value="<?= h($numero) ?>" required>
+                    <input type="number" name="id" id="id" min="1" step="1" value="<?= h($idEtudiant) ?>" required>
                     <button type="submit">Rechercher</button>
                 </td>
             </tr>

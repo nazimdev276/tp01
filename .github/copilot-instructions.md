@@ -2,70 +2,42 @@
 
 ## Build, test, and lint commands
 
-This repository is a vanilla PHP 8 multi-page application. There is no framework, Composer setup, test runner, CI pipeline, or build step to invoke.
+This is a vanilla PHP 8 application with no Composer setup, test runner, CI pipeline, formatter, or build step.
 
-Use the project’s actual validation commands:
+- Syntax-check one PHP file: `php -l personne/enregistrer.php` (replace with the file being changed).
+- Syntax-check all PHP files: `find . -name '*.php' -exec php -l {} \;`
+- Start local Apache/MySQL: `/opt/lampp/lampp start`
+- Import the schema and seed data when needed: `/opt/lampp/bin/mysql -uroot < database/database.sql`
+- Run the integration diagnostics in a browser at `http://localhost/tp01/tests.php`. The page exercises selected routes and CRUD/upload flows against the local app and database; it has no individual-test CLI selector. It requires the services and schema above and writable `uploads/`.
 
-- Syntax-check a single PHP file:
-  - `php -l personne/enregistrer.php`
-- Syntax-check the whole project:
-  - `find . -name '*.php' -exec php -l {} \;`
-- Start the local PHP/MySQL environment:
-  - `/opt/lampp/lampp start`
-- Re-import the schema and seed data if needed:
-  - `/opt/lampp/bin/mysql -uroot < database/database.sql`
-
-The app is served from `http://localhost/tp01/` and lives under `/opt/lampp/htdocs/tp01`.
+The application is served from `/opt/lampp/htdocs/tp01`.
 
 ## High-level architecture
 
-This app is structured as a set of page-level PHP scripts rather than a router/front controller:
+- Apache serves PHP files directly. `index.php` is the landing page; there is no router, framework, or front controller.
+- Feature directories own their forms, request handlers, SQL, and list pages. The main areas cover people/students and travelers, teachers, modules, filières, lookup data (nationalities, sports, transport), and grade bulletins.
+- Pages share `config/database.php` for the PDO connection, and `includes/` for the header/footer partials, escaping and upload helpers, and static option lists. `js/script.js` supplies client-side form validation and UI behavior.
+- `database/database.sql` defines the MySQL schema, constraints, upgrade statements, and seed values. Some choices are loaded from lookup tables (such as nationalities, filières, sports, and transport); fixed options are defined in `includes/donnees.php`.
+- Relationships are enforced by foreign keys, including `module.filiere_code` and `personne.nationalite_code`. Several multi-select values on `personne` are stored as comma-separated strings in a single column.
+- Uploaded images are stored in `uploads/`; its `.htaccess` protection is part of the upload safety boundary.
 
-- `index.php` is the landing page.
-- `personne/` contains the person CRUD flow:
-  - `formulaire.php` renders the form
-  - `enregistrer.php` validates and inserts into `personne`
-  - `liste.php` displays records
-  - `afficher_php.php` and `upload_image.php` are alternate handlers reached via specific form actions
-- `nationalite/` contains the nationality flow:
-  - `nationalite.php` renders the form
-  - `enregistrer.php` validates and inserts into `nationalite`
-  - `liste.php` displays records
+## Project structure and page roles
 
-Core application wiring:
-
-- `config/database.php` is the single PDO connection used across the app; keep this as the one DB entry point.
-- `includes/donnees.php` contains the static arrays used by the UI (`$CIVILITES`, `$PAYS`, `$PLATEFORMES`, `$APPLICATIONS`).
-- `includes/fonctions.php` centralizes the utility functions, notably:
-  - `h()` for HTML escaping/XSS-safe output
-  - `post_liste()` to whitelist checkbox values against the allowed arrays
-  - `enregistrer_image()` to validate and save uploaded images
-- `js/script.js` mirrors validation rules in JavaScript for the form UX and preview behavior.
-
-Important data-flow conventions:
-
-- The nationality dropdown is loaded dynamically from the `nationalite` table in MySQL.
-- `plateformes` and `applications` are stored as comma-joined strings in a single database column rather than in join tables.
-- `personne.nationalite_code` references `nationalite(code)` and is protected by a foreign key with `ON DELETE RESTRICT`.
-- Uploaded files are stored under `uploads/` and must keep the existing `.htaccess` protection in place.
+- `index.php` links to the main features. Pages are directly addressable; links and form actions identify the next page or handler.
+- `personne/` contains the person form, save/list/update/delete handlers, and alternate form actions for display and image upload. It also contains traveler search and list/delete pages.
+- `enseignant/`, `module/`, and `filiere/` each provide a management form and a list page; their management forms support searching and record changes.
+- `nationalite/`, `sport/`, and `transport/` manage lookup values used by other forms. Each has a list page; transport also has a delete handler.
+- `notes/bulletin.php` searches for a student and manages their module grades; `notes/liste.php` displays grades, and `notes/modules.php` returns JSON modules for a filière.
+- `config/` holds the PDO connection. `includes/` holds shared page fragments, helper functions, and fixed option values. `database/` holds the schema and seed data; `css/` and `js/` hold browser assets; `uploads/` holds images.
+- `tests.php` is the local diagnostic page. Do not edit it without explicit authorization.
 
 ## Key conventions
 
-- Page contract: every page must define `$base` and `$titre` before including `includes/header.php`.
-  - use `''` in `index.php`
-  - use `'../'` in subdirectories
-- `includes/header.php` / `includes/footer.php` are partial includes, not full layouts; do not omit the required variables.
-- Keep the form-action pattern intact: the same form can submit to different handlers using `formaction` and `formnovalidate`.
-- Validation must be updated in both PHP and JavaScript when changing field rules or allowed values.
-  - JavaScript validation is bypassed for `formnovalidate` buttons, so PHP is the real gate.
-- `post_liste()` whitelists checkbox values against `includes/donnees.php`; add any new option in both the PHP arrays and the JS validator.
-- Use prepared statements for all SQL and escape output with `h()` before rendering to HTML.
-- Keep UI text and comments in French.
-- Do not add another PDO database connection; re-use `config/database.php`.
-- Keep the application simple: one file per action, no router/front controller, no framework.
-
-## Added project context
-
-- The schema and seed data live in `database/database.sql` and are intended to be idempotent.
-- File uploads are intentionally strict: maximum 2 MB, MIME check via `finfo`, and random hex filename generation.
-- The repository does not include a higher-level app framework, so the safest way to validate changes is to run PHP lint checks and keep the existing page/form patterns consistent.
+- Before including `includes/header.php`, each page must define `$base` and `$titre`; load `includes/fonctions.php` first because the header uses `h()`. Use `''` at the root and `'../'` in feature directories. The header and footer are partials, not complete page layouts.
+- Use `require_once` with `__DIR__`-relative paths. Reuse the single PDO connection from `config/database.php`; do not create another connection.
+- Keep each action in its existing direct PHP endpoint and preserve form routing patterns such as `formaction` and `formnovalidate`; don't introduce a router or merge alternate handlers into one endpoint.
+- Validate submitted data in PHP, which is authoritative. When changing a rule mirrored in the browser, update `js/script.js` too. `formnovalidate` bypasses browser validation, not server validation.
+- Use prepared statements for SQL and `h()` for dynamic HTML output. Use `post_liste()` with the allowlists in `includes/donnees.php` for checkbox values.
+- Route image uploads through `enregistrer_image()`; it enforces a 2 MB limit, checks MIME and image contents, and generates a random filename. Preserve `uploads/.htaccess`.
+- Keep UI text, validation messages, and comments in French.
+- `tests.php` is a localhost-only diagnostic page that performs temporary writes and cleanup; do not modify it unless explicitly authorized.

@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $noteExistante = $stmt->fetch();
 
                         if (!$noteExistante) {
-                            $message = "Aucune note n'existe pour ce module : rien à supprimer.";
+                            $message = 'Note Inéxistante pour ce module';
                         } else {
                             $noteExiste = true;
                             $codeModule = $noteExistante['code_module'];
@@ -103,7 +103,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 $message = 'Note supprimée avec succès.';
                                 $messageType = 'ok';
                                 $noteExiste = false;
-                                $note = '';
                             } catch (PDOException $e) {
                                 $message = 'Erreur lors de la suppression de la note.';
                             }

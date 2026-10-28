@@ -426,10 +426,10 @@ if ($runRequested) {
                     $listPage = diagnostic_request($applicationUrl . 'personne/liste.php?id=' . rawurlencode((string)$personId));
                     diagnostic_assert(str_contains($listPage['body'], $studentName) && str_contains($listPage['body'], 'Famille'), 'La liste ne retourne pas l’étudiant.');
 
-                    diagnostic_run('Cycle CRUD Bulletin de Notes', static function () use ($pdo, $applicationUrl, $studentNumber, $bulletinModuleCode, $bulletinModuleName, $filiereCode): string {
+                    diagnostic_run('Cycle CRUD Bulletin de Notes', static function () use ($pdo, $applicationUrl, $personId, $bulletinModuleCode, $bulletinModuleName, $filiereCode): string {
                         $notFound = diagnostic_request($applicationUrl . 'notes/bulletin.php', 'POST', [
                             'action' => 'rechercher',
-                            'numero' => (string)random_int(100000000, 999999999),
+                            'id' => (string)random_int(2000000000, 2147483647),
                         ]);
                         diagnostic_assert(str_contains($notFound['body'], 'Etudiant Inéxistant'), 'La recherche d’un étudiant absent n’affiche pas le message attendu.');
 
@@ -449,7 +449,7 @@ if ($runRequested) {
                         $form = diagnostic_request($applicationUrl . 'notes/bulletin.php');
                         diagnostic_assert(str_contains($form['body'], "confirm('Supprimer cette note ?')"), 'La suppression ne demande pas de confirmation.');
 
-                        $selectionData = ['action' => 'rechercher', 'numero' => $studentNumber, 'module' => $bulletinModuleCode];
+                        $selectionData = ['action' => 'rechercher', 'id' => (string)$personId, 'module' => $bulletinModuleCode];
                         $selection = diagnostic_request($applicationUrl . 'notes/bulletin.php', 'POST', $selectionData);
                         diagnostic_assert(
                             str_contains($selection['body'], 'value="' . $bulletinModuleCode . '"')
@@ -472,8 +472,8 @@ if ($runRequested) {
                         diagnostic_post($applicationUrl . 'notes/bulletin.php', $saveData, 'Note enregistrée avec succès.');
                         $savedNote = diagnostic_database_value(
                             $pdo,
-                            'SELECT `Note` FROM Notes WHERE Num_Etudiant = :numero AND Nom_module = :nom_module',
-                            [':numero' => $studentNumber, ':nom_module' => $bulletinModuleName]
+                            'SELECT `Note` FROM Notes WHERE Num_Etudiant = :id_etudiant AND Nom_module = :nom_module',
+                            [':id_etudiant' => $personId, ':nom_module' => $bulletinModuleName]
                         );
                         diagnostic_assert($savedNote === '15.25', 'La note n’a pas été insérée dans Notes.');
 
@@ -488,8 +488,8 @@ if ($runRequested) {
                         diagnostic_assert(
                             diagnostic_database_value(
                                 $pdo,
-                                'SELECT `Note` FROM Notes WHERE Num_Etudiant = :numero AND Nom_module = :nom_module',
-                                [':numero' => $studentNumber, ':nom_module' => $bulletinModuleName]
+                                'SELECT `Note` FROM Notes WHERE Num_Etudiant = :id_etudiant AND Nom_module = :nom_module',
+                                [':id_etudiant' => $personId, ':nom_module' => $bulletinModuleName]
                             ) === '17.50',
                             'La modification n’a pas été persistée.'
                         );
@@ -506,8 +506,8 @@ if ($runRequested) {
                         diagnostic_assert(
                             (int)diagnostic_database_value(
                                 $pdo,
-                                'SELECT COUNT(*) FROM Notes WHERE Num_Etudiant = :numero AND Nom_module = :nom_module',
-                                [':numero' => $studentNumber, ':nom_module' => $bulletinModuleName]
+                                'SELECT COUNT(*) FROM Notes WHERE Num_Etudiant = :id_etudiant AND Nom_module = :nom_module',
+                                [':id_etudiant' => $personId, ':nom_module' => $bulletinModuleName]
                             ) === 0,
                             'La ligne de note existe encore après suppression.'
                         );
@@ -520,9 +520,9 @@ if ($runRequested) {
                         return 'Recherche, sélection, création, modification, doublon et suppressions vérifiés.';
                         } finally {
                             $stmt = $pdo->prepare(
-                                'DELETE FROM Notes WHERE Num_Etudiant = :numero AND Nom_module = :nom_module'
+                                'DELETE FROM Notes WHERE Num_Etudiant = :id_etudiant AND Nom_module = :nom_module'
                             );
-                            $stmt->execute([':numero' => $studentNumber, ':nom_module' => $bulletinModuleName]);
+                            $stmt->execute([':id_etudiant' => $personId, ':nom_module' => $bulletinModuleName]);
                             $stmt = $pdo->prepare('DELETE FROM module WHERE code = :code');
                             $stmt->execute([':code' => $bulletinModuleCode]);
                         }
@@ -597,7 +597,7 @@ if ($runRequested) {
                     $results[] = ['label' => 'Nettoyage du fichier image voyageur', 'ok' => false, 'detail' => $e->getMessage()];
                 }
                 $cleanups = [
-                    ['DELETE FROM Notes WHERE Num_Etudiant = :numero AND Nom_module = :nom_module', 'SELECT COUNT(*) FROM Notes WHERE Num_Etudiant = :numero AND Nom_module = :nom_module', [':numero' => $studentNumber, ':nom_module' => $bulletinModuleName]],
+                    ['DELETE FROM Notes WHERE Num_Etudiant = :id_etudiant AND Nom_module = :nom_module', 'SELECT COUNT(*) FROM Notes WHERE Num_Etudiant = :id_etudiant AND Nom_module = :nom_module', [':id_etudiant' => $personId, ':nom_module' => $bulletinModuleName]],
                     ['DELETE FROM module WHERE code = :code', 'SELECT COUNT(*) FROM module WHERE code = :code', [':code' => $bulletinModuleCode]],
                     ['DELETE FROM personne WHERE numero = :value AND nom_prenom IN (:created, :modified)', 'SELECT COUNT(*) FROM personne WHERE numero = :value AND nom_prenom IN (:created, :modified)', [':value' => $studentNumber, ':created' => $studentName, ':modified' => $studentUpdatedName]],
                     ['DELETE FROM module WHERE code = :value AND designation IN (:created, :modified)', 'SELECT COUNT(*) FROM module WHERE code = :value AND designation IN (:created, :modified)', [':value' => $moduleCode, ':created' => $moduleCreatedDesignation, ':modified' => $moduleUpdatedDesignation]],

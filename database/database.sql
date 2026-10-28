@@ -58,6 +58,17 @@ CREATE TABLE IF NOT EXISTS module (
     ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
+-- Notes des étudiants par module
+CREATE TABLE IF NOT EXISTS Notes (
+  Num_Etudiant VARCHAR(10)  NOT NULL,
+  Filiere      VARCHAR(10)  NOT NULL,
+  Nom_module   VARCHAR(100) NOT NULL,
+  code_module  VARCHAR(20)  NOT NULL,
+  coefficient  DECIMAL(5,2) NOT NULL,
+  Note         DECIMAL(5,2) NOT NULL,
+  UNIQUE KEY uq_notes_etudiant_module (Num_Etudiant, Nom_module)
+) ENGINE=InnoDB;
+
 -- Table des moyens de transport
 CREATE TABLE IF NOT EXISTS moyen_transport (
   libelle      VARCHAR(20)  NOT NULL PRIMARY KEY,

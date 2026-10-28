@@ -177,6 +177,7 @@ if ($runRequested) {
             ['Formulaire modules', 'module/module.php', 'id="form-module"'],
             ['Liste modules', 'module/liste.php', 'Liste des modules'],
             ['Enregistrement module', 'module/enregistrer.php', null],
+            ['Formulaire Bulletin de Notes', 'notes/bulletin.php', 'Saisie Bulletin de Notes'],
             ['Formulaire filières', 'filiere/filiere.php', 'id="form-filiere"'],
             ['Liste filières', 'filiere/liste.php', 'Liste des filières'],
             ['Enregistrement filière', 'filiere/enregistrer.php', null],
@@ -245,6 +246,8 @@ if ($runRequested) {
             $voyageurName = 'TEST-' . $token;
             $voyageurUpdatedName = 'MOD-' . $token;
             $studentNumber = (string)random_int(100000000, 999999999);
+            $bulletinModuleCode = 'B' . $token;
+            $bulletinModuleName = 'NOTE-' . $token;
             $teacherNumber = (string)random_int(100000000, 999999999);
             $voyageurNumber = (string)random_int(100000000, 999999999);
             $imageFilename = null;
@@ -406,7 +409,7 @@ if ($runRequested) {
                 }, $results);
 
                 $personId = null;
-                diagnostic_run('Cycle CRUD étudiant', static function () use ($pdo, $applicationUrl, $studentNumber, $studentName, $studentUpdatedName, $nationaliteCode, $filiereCode, $transportName, $sportName, $PAYS, $CIVILITES, &$personId): string {
+                diagnostic_run('Cycle CRUD étudiant', static function () use ($pdo, $applicationUrl, $studentNumber, $studentName, $studentUpdatedName, $nationaliteCode, $filiereCode, $transportName, $sportName, $bulletinModuleCode, $bulletinModuleName, $PAYS, $CIVILITES, &$personId, &$results): string {
                     $studentData = [
                         'numero' => $studentNumber, 'type_foyer' => 'Famille', 'civilite' => $CIVILITES[0],
                         'nom_prenom' => $studentName, 'adresse' => 'Adresse de test',
@@ -422,6 +425,109 @@ if ($runRequested) {
                     diagnostic_assert(str_contains($searchPage['body'], $studentName) && str_contains($searchPage['body'], 'value="Famille" checked'), 'La recherche ne retourne pas les informations de l’étudiant.');
                     $listPage = diagnostic_request($applicationUrl . 'personne/liste.php?id=' . rawurlencode((string)$personId));
                     diagnostic_assert(str_contains($listPage['body'], $studentName) && str_contains($listPage['body'], 'Famille'), 'La liste ne retourne pas l’étudiant.');
+
+                    diagnostic_run('Cycle CRUD Bulletin de Notes', static function () use ($pdo, $applicationUrl, $studentNumber, $bulletinModuleCode, $bulletinModuleName, $filiereCode): string {
+                        $notFound = diagnostic_request($applicationUrl . 'notes/bulletin.php', 'POST', [
+                            'action' => 'rechercher',
+                            'numero' => (string)random_int(100000000, 999999999),
+                        ]);
+                        diagnostic_assert(str_contains($notFound['body'], 'Etudiant Inéxistant'), 'La recherche d’un étudiant absent n’affiche pas le message attendu.');
+
+                        try {
+                            $stmt = $pdo->prepare(
+                                'INSERT INTO module (code, designation, coefficient, volume_horaire, filiere_code)
+                                 VALUES (:code, :designation, :coefficient, :volume_horaire, :filiere_code)'
+                            );
+                            $stmt->execute([
+                                ':code' => $bulletinModuleCode,
+                                ':designation' => $bulletinModuleName,
+                                ':coefficient' => '3.50',
+                                ':volume_horaire' => 12,
+                                ':filiere_code' => $filiereCode,
+                            ]);
+
+                        $form = diagnostic_request($applicationUrl . 'notes/bulletin.php');
+                        diagnostic_assert(str_contains($form['body'], "confirm('Supprimer cette note ?')"), 'La suppression ne demande pas de confirmation.');
+
+                        $selectionData = ['action' => 'rechercher', 'numero' => $studentNumber, 'module' => $bulletinModuleCode];
+                        $selection = diagnostic_request($applicationUrl . 'notes/bulletin.php', 'POST', $selectionData);
+                        diagnostic_assert(
+                            str_contains($selection['body'], 'value="' . $bulletinModuleCode . '"')
+                            && str_contains($selection['body'], 'name="coefficient" id="coefficient" step="0.01" value="3.50"')
+                            && str_contains($selection['body'], 'name="note" id="note" step="0.01" value=""'),
+                            'Un module sans note doit afficher son code et coefficient, en laissant la note vide.'
+                        );
+
+                        $missingModification = diagnostic_request(
+                            $applicationUrl . 'notes/bulletin.php',
+                            'POST',
+                            $selectionData + ['modifier' => '1', 'note' => '']
+                        );
+                        diagnostic_assert(
+                            str_contains($missingModification['body'], "rien à modifier"),
+                            'La modification d’une note inexistante doit signaler qu’il n’y a rien à modifier.'
+                        );
+
+                        $saveData = $selectionData + ['enregistrer' => '1', 'note' => '15.25'];
+                        diagnostic_post($applicationUrl . 'notes/bulletin.php', $saveData, 'Note enregistrée avec succès.');
+                        $savedNote = diagnostic_database_value(
+                            $pdo,
+                            'SELECT `Note` FROM Notes WHERE Num_Etudiant = :numero AND Nom_module = :nom_module',
+                            [':numero' => $studentNumber, ':nom_module' => $bulletinModuleName]
+                        );
+                        diagnostic_assert($savedNote === '15.25', 'La note n’a pas été insérée dans Notes.');
+
+                        $duplicate = diagnostic_request($applicationUrl . 'notes/bulletin.php', 'POST', $saveData);
+                        diagnostic_assert(
+                            str_contains($duplicate['body'], 'Une note existe déjà pour cet étudiant et ce module.'),
+                            'Une seconde insertion doit signaler le doublon.'
+                        );
+
+                        $modifyData = $selectionData + ['modifier' => '1', 'note' => '17.50'];
+                        diagnostic_post($applicationUrl . 'notes/bulletin.php', $modifyData, 'modifiées avec succès.');
+                        diagnostic_assert(
+                            diagnostic_database_value(
+                                $pdo,
+                                'SELECT `Note` FROM Notes WHERE Num_Etudiant = :numero AND Nom_module = :nom_module',
+                                [':numero' => $studentNumber, ':nom_module' => $bulletinModuleName]
+                            ) === '17.50',
+                            'La modification n’a pas été persistée.'
+                        );
+
+                        $deleteData = $selectionData + ['supprimer' => '1'];
+                        $deleted = diagnostic_request($applicationUrl . 'notes/bulletin.php', 'POST', $deleteData);
+                        diagnostic_assert(
+                            str_contains($deleted['body'], 'Note supprimée avec succès.')
+                            && str_contains($deleted['body'], 'name="code_module" id="code-module" value="' . $bulletinModuleCode . '"')
+                            && str_contains($deleted['body'], 'name="coefficient" id="coefficient" step="0.01" value="3.50"')
+                            && str_contains($deleted['body'], 'name="note" id="note" step="0.01" value="17.50"'),
+                            'La suppression doit confirmer et réafficher les valeurs de la note supprimée.'
+                        );
+                        diagnostic_assert(
+                            (int)diagnostic_database_value(
+                                $pdo,
+                                'SELECT COUNT(*) FROM Notes WHERE Num_Etudiant = :numero AND Nom_module = :nom_module',
+                                [':numero' => $studentNumber, ':nom_module' => $bulletinModuleName]
+                            ) === 0,
+                            'La ligne de note existe encore après suppression.'
+                        );
+
+                        $deleteMissing = diagnostic_request($applicationUrl . 'notes/bulletin.php', 'POST', $deleteData);
+                        diagnostic_assert(
+                            str_contains($deleteMissing['body'], 'Note Inéxistante pour ce module'),
+                            'La suppression d’une note inexistante doit afficher le message attendu.'
+                        );
+                        return 'Recherche, sélection, création, modification, doublon et suppressions vérifiés.';
+                        } finally {
+                            $stmt = $pdo->prepare(
+                                'DELETE FROM Notes WHERE Num_Etudiant = :numero AND Nom_module = :nom_module'
+                            );
+                            $stmt->execute([':numero' => $studentNumber, ':nom_module' => $bulletinModuleName]);
+                            $stmt = $pdo->prepare('DELETE FROM module WHERE code = :code');
+                            $stmt->execute([':code' => $bulletinModuleCode]);
+                        }
+                    }, $results);
+
                     $studentData['id'] = (string)$personId;
                     $studentData['nom_prenom'] = $studentUpdatedName;
                     $studentData['type_foyer'] = 'Individuelle';
@@ -491,6 +597,8 @@ if ($runRequested) {
                     $results[] = ['label' => 'Nettoyage du fichier image voyageur', 'ok' => false, 'detail' => $e->getMessage()];
                 }
                 $cleanups = [
+                    ['DELETE FROM Notes WHERE Num_Etudiant = :numero AND Nom_module = :nom_module', 'SELECT COUNT(*) FROM Notes WHERE Num_Etudiant = :numero AND Nom_module = :nom_module', [':numero' => $studentNumber, ':nom_module' => $bulletinModuleName]],
+                    ['DELETE FROM module WHERE code = :code', 'SELECT COUNT(*) FROM module WHERE code = :code', [':code' => $bulletinModuleCode]],
                     ['DELETE FROM personne WHERE numero = :value AND nom_prenom IN (:created, :modified)', 'SELECT COUNT(*) FROM personne WHERE numero = :value AND nom_prenom IN (:created, :modified)', [':value' => $studentNumber, ':created' => $studentName, ':modified' => $studentUpdatedName]],
                     ['DELETE FROM module WHERE code = :value AND designation IN (:created, :modified)', 'SELECT COUNT(*) FROM module WHERE code = :value AND designation IN (:created, :modified)', [':value' => $moduleCode, ':created' => $moduleCreatedDesignation, ':modified' => $moduleUpdatedDesignation]],
                     ['DELETE FROM enseignant WHERE numero = :value AND nom_prenom IN (:created, :modified)', 'SELECT COUNT(*) FROM enseignant WHERE numero = :value AND nom_prenom IN (:created, :modified)', [':value' => $teacherNumber, ':created' => $teacherName, ':modified' => $teacherUpdatedName]],
